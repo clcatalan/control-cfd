@@ -1,0 +1,135 @@
+.editor-panel {
+  height: 100vh;
+  background-color: #1e1e1e;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #262626;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.editor-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.language-select {
+  padding: 8px 12px;
+  background-color: #1e1e1e;
+  color: #fff;
+  border: 1px solid #3c3c3c;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.language-select:hover {
+  border-color: #4c4c4c;
+}
+
+.language-select:focus {
+  border-color: #0a84ff;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-run,
+.btn-submit {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  outline: none;
+}
+
+.btn-run {
+  background-color: #3c3c3c;
+  color: #fff;
+}
+
+.btn-run:hover {
+  background-color: #4c4c4c;
+}
+
+.btn-submit {
+  background-color: #00b8a3;
+  color: #fff;
+}
+
+.btn-submit:hover {
+  background-color: #00a391;
+}
+
+.btn-run:active,
+.btn-submit:active {
+  transform: scale(0.98);
+}
+
+.editor-container {
+  flex: 1;
+  overflow: hidden;
+  border-bottom: 1px solid #3c3c3c;
+}
+
+.console-area {
+  height: 200px;
+  background-color: #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #3c3c3c;
+}
+
+.console-header {
+  padding: 10px 16px;
+  background-color: #262626;
+  border-bottom: 1px solid #3c3c3c;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.console-content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 13px;
+  color: #d1d1d1;
+}
+
+.console-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.console-content::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+.console-content::-webkit-scrollbar-thumb {
+  background: #3c3c3c;
+  border-radius: 4px;
+}
+
+.console-content::-webkit-scrollbar-thumb:hover {
+  background: #4c4c4c;
+}
+
+.console-placeholder {
+  color: #666;
+  font-style: italic;
+}
