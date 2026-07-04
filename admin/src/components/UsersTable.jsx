@@ -1,0 +1,58 @@
+import React from 'react'
+import './UsersTable.css'
+
+function formatDate(dateString) {
+  if (!dateString) return '—'
+  const date = new Date(dateString)
+  return date.toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
+
+function UsersTable({ users, onDelete }) {
+  if (users.length === 0) {
+    return (
+      <div className="users-empty">
+        <p>No registered users yet.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="users-table-wrapper">
+      <table className="users-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Participant ID</th>
+            <th>Registered</th>
+            <th className="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user.id}>
+              <td>{user.id}</td>
+              <td className="participant-id">{user.participant_id}</td>
+              <td>{formatDate(user.created_at)}</td>
+              <td className="actions-col">
+                <button
+                  className="delete-btn"
+                  onClick={() => onDelete(user.participant_id)}
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+export default UsersTable
