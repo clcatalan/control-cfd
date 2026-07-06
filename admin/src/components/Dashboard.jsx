@@ -1,3 +1,5 @@
+// Dashboard.jsx was initially AI-generated
+
 import React, { useState, useEffect } from 'react'
 import UsersTable from './UsersTable'
 import './Dashboard.css'
@@ -5,6 +7,13 @@ import './Dashboard.css'
 const API_URL = 'http://localhost:3001/api'
 
 function Dashboard({ onLogout }) {
+  /**
+   * Done by AI and Human
+   * 
+   * This function basically fetches the list of users from the backend API 
+   * and manages the state for loading, error, and modal visibility. 
+   * It also handles adding and deleting users through API calls.
+   */
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -12,6 +21,12 @@ function Dashboard({ onLogout }) {
   const [newParticipantId, setNewParticipantId] = useState('')
 
   const fetchUsers = async () => {
+    /**
+     * 100% done by AI
+     * 
+     * This specific function is in charge of fetching the users with 
+     * appropriate error handling.
+     */
     setLoading(true)
     setError('')
     try {
