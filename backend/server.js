@@ -1,10 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const path = require('path');
 const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+const FRONTEND_DIST = path.join(__dirname, '../frontend/dist');
+const ADMIN_DIST = path.join(__dirname, '../admin/dist');
 
 // Middleware
 app.use(cors());
@@ -118,6 +122,44 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+// Admin login endpoint
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username and password are required'
+      });
+    }
+
+    const admin = await db.verifyAdminCredentials(username.trim(), password);
+
+    if (admin) {
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        admin: {
+          id: admin.id,
+          username: admin.username
+        }
+      });
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid username or password'
+    });
+  } catch (error) {
+    console.error('Admin login error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during login'
+    });
+  }
+});
+
 // Get all users (for admin purposes)
 app.get('/api/users', async (req, res) => {
   try {
@@ -194,8 +236,22 @@ app.delete('/api/users/:participantId', async (req, res) => {
   }
 });
 
+// Serve the built admin app under /admin, and the built frontend app at the root.
+// Both share this same server/database, so the admin panel always reflects live data.
+app.use('/admin', express.static(ADMIN_DIST));
+app.get('/admin/*', (req, res) => {
+  res.sendFile(path.join(ADMIN_DIST, 'index.html'));
+});
+
+app.use(express.static(FRONTEND_DIST));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(FRONTEND_DIST, 'index.html'));
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`API endpoints available at http://localhost:${PORT}/api`);
+  console.log(`Frontend available at http://localhost:${PORT}/`);
+  console.log(`Admin panel available at http://localhost:${PORT}/admin`);
 });

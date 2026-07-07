@@ -1,5 +1,9 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const bcrypt = require('bcryptjs');
+
+const DEFAULT_ADMIN_USERNAME = 'admin';
+const DEFAULT_ADMIN_PASSWORD = 'admin123';
 
 // Create database connection
 const dbPath = path.join(__dirname, 'users.db');
@@ -25,6 +29,46 @@ function initializeDatabase() {
       console.error('Error creating table:', err.message);
     } else {
       console.log('Users table ready');
+    }
+  });
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS admins (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `, (err) => {
+    if (err) {
+      console.error('Error creating admins table:', err.message);
+    } else {
+      console.log('Admins table ready');
+      seedDefaultAdmin();
+    }
+  });
+}
+
+// Ensure a default admin account exists so the admin panel is reachable on a fresh database
+function seedDefaultAdmin() {
+  db.get('SELECT id FROM admins WHERE username = ?', [DEFAULT_ADMIN_USERNAME], (err, row) => {
+    if (err) {
+      console.error('Error checking default admin:', err.message);
+      return;
+    }
+    if (!row) {
+      const passwordHash = bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10);
+      db.run(
+        'INSERT INTO admins (username, password_hash) VALUES (?, ?)',
+        [DEFAULT_ADMIN_USERNAME, passwordHash],
+        (err) => {
+          if (err) {
+            console.error('Error seeding default admin:', err.message);
+          } else {
+            console.log(`Default admin account created (username: ${DEFAULT_ADMIN_USERNAME})`);
+          }
+        }
+      );
     }
   });
 }
@@ -85,6 +129,30 @@ const dbOperations = {
         }
       });
     });
+  },
+
+  // Find admin by username
+  findAdminByUsername: (username) => {
+    return new Promise((resolve, reject) => {
+      const sql = 'SELECT * FROM admins WHERE username = ?';
+      db.get(sql, [username], (err, row) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(row);
+        }
+      });
+    });
+  },
+
+  // Verify admin credentials, returns the admin row if valid, otherwise null
+  verifyAdminCredentials: async (username, password) => {
+    const admin = await dbOperations.findAdminByUsername(username);
+    if (!admin) {
+      return null;
+    }
+    const isValid = bcrypt.compareSync(password, admin.password_hash);
+    return isValid ? admin : null;
   }
 };
 

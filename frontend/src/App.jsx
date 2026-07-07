@@ -3,12 +3,14 @@ import ProblemPanel from './components/ProblemPanel'
 import EditorPanel from './components/EditorPanel'
 import ExplanationPanel from './components/ExplanationPanel'
 import Login from './components/Login'
+import ProblemList from './components/ProblemList'
 import './App.css'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [participantId, setParticipantId] = useState('')
   const [userData, setUserData] = useState(null)
+  const [selectedProblem, setSelectedProblem] = useState(null)
   const [leftWidth, setLeftWidth] = useState(30)
   const [middleWidth, setMiddleWidth] = useState(40)
   const [activeHandle, setActiveHandle] = useState(null)
@@ -38,6 +40,7 @@ function App() {
     setIsLoggedIn(false)
     setParticipantId('')
     setUserData(null)
+    setSelectedProblem(null)
     localStorage.removeItem('participantId')
     localStorage.removeItem('userData')
   }
@@ -89,11 +92,25 @@ function App() {
     return <Login onLogin={handleLogin} />
   }
 
+  // Show problem list page until the participant picks a problem
+  if (!selectedProblem) {
+    return (
+      <ProblemList
+        participantId={participantId}
+        onSelectProblem={setSelectedProblem}
+        onLogout={handleLogout}
+      />
+    )
+  }
+
   // Show main LeetCode UI if logged in
   return (
     <div className="app">
       <div className="app-header">
         <div className="header-left">
+          <button className="back-button" onClick={() => setSelectedProblem(null)}>
+            &larr; Problems
+          </button>
           <span className="participant-id">Participant: {participantId}</span>
         </div>
         <div className="header-right">

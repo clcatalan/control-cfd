@@ -42,6 +42,13 @@ npm run dev
 - Deletes a user by participant ID
 - For admin purposes
 
+### Admin
+
+**POST /api/admin/login**
+- Body: `{ "username": "string", "password": "string" }`
+- Validates credentials against the `admins` table
+- Returns admin data on success
+
 ### Health Check
 
 **GET /api/health**
@@ -57,6 +64,29 @@ CREATE TABLE users (
   participant_id TEXT UNIQUE NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE admins (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 ```
 
-The database file (`users.db`) is created automatically when the server starts.
+The database file (`users.db`) is created automatically when the server starts. A default admin
+account (`admin` / `admin123`) is seeded automatically if the `admins` table is empty — change
+this password after first login.
+
+## Serving the frontend and admin apps
+
+In addition to the API, this server serves the built frontend and admin apps as static files:
+
+- `frontend/dist` is served at `/`
+- `admin/dist` is served at `/admin`
+
+Build both before starting the server in production:
+```bash
+cd frontend && npm run build
+cd ../admin && npm run build
+cd ../backend && npm start
+```
