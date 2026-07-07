@@ -1,148 +1,108 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+require('dotenv').config();
+const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
 
 const DEFAULT_ADMIN_USERNAME = 'admin';
 const DEFAULT_ADMIN_PASSWORD = 'admin123';
 
-// Create database connection
-const dbPath = path.join(__dirname, 'users.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('Connected to SQLite database');
-    initializeDatabase();
-  }
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is required');
+}
+
+// Hosted Postgres providers (Neon, Supabase, Railway, Render, ...) require SSL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false }
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle Postgres client:', err.message);
 });
 
 // Initialize database schema
-function initializeDatabase() {
-  db.run(`
+async function initializeDatabase() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       participant_id TEXT UNIQUE NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMPTZ DEFAULT NOW()
     )
-  `, (err) => {
-    if (err) {
-      console.error('Error creating table:', err.message);
-    } else {
-      console.log('Users table ready');
-    }
-  });
+  `);
+  console.log('Users table ready');
 
-  db.run(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS admins (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMPTZ DEFAULT NOW()
     )
-  `, (err) => {
-    if (err) {
-      console.error('Error creating admins table:', err.message);
-    } else {
-      console.log('Admins table ready');
-      seedDefaultAdmin();
-    }
-  });
+  `);
+  console.log('Admins table ready');
+
+  await seedDefaultAdmin();
 }
 
 // Ensure a default admin account exists so the admin panel is reachable on a fresh database
-function seedDefaultAdmin() {
-  db.get('SELECT id FROM admins WHERE username = ?', [DEFAULT_ADMIN_USERNAME], (err, row) => {
-    if (err) {
-      console.error('Error checking default admin:', err.message);
-      return;
-    }
-    if (!row) {
-      const passwordHash = bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10);
-      db.run(
-        'INSERT INTO admins (username, password_hash) VALUES (?, ?)',
-        [DEFAULT_ADMIN_USERNAME, passwordHash],
-        (err) => {
-          if (err) {
-            console.error('Error seeding default admin:', err.message);
-          } else {
-            console.log(`Default admin account created (username: ${DEFAULT_ADMIN_USERNAME})`);
-          }
-        }
-      );
-    }
-  });
+async function seedDefaultAdmin() {
+  const { rows } = await pool.query('SELECT id FROM admins WHERE username = $1', [DEFAULT_ADMIN_USERNAME]);
+  if (rows.length === 0) {
+    const passwordHash = bcrypt.hashSync(DEFAULT_ADMIN_PASSWORD, 10);
+    await pool.query(
+      'INSERT INTO admins (username, password_hash) VALUES ($1, $2)',
+      [DEFAULT_ADMIN_USERNAME, passwordHash]
+    );
+    console.log(`Default admin account created (username: ${DEFAULT_ADMIN_USERNAME})`);
+  }
 }
+
+initializeDatabase().catch((err) => {
+  console.error('Error initializing database:', err.message);
+});
+
+// Postgres unique-violation error code
+const UNIQUE_VIOLATION = '23505';
 
 // Database operations
 const dbOperations = {
   // Create a new user
-  createUser: (participantId) => {
-    return new Promise((resolve, reject) => {
-      const sql = 'INSERT INTO users (participant_id) VALUES (?)';
-      db.run(sql, [participantId], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ id: this.lastID, participant_id: participantId });
-        }
-      });
-    });
+  createUser: async (participantId) => {
+    try {
+      const { rows } = await pool.query(
+        'INSERT INTO users (participant_id) VALUES ($1) RETURNING id, participant_id',
+        [participantId]
+      );
+      return { id: rows[0].id, participant_id: rows[0].participant_id };
+    } catch (err) {
+      if (err.code === UNIQUE_VIOLATION) {
+        throw new Error('UNIQUE constraint failed: users.participant_id');
+      }
+      throw err;
+    }
   },
 
   // Find user by participant ID
-  findUserByParticipantId: (participantId) => {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM users WHERE participant_id = ?';
-      db.get(sql, [participantId], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  findUserByParticipantId: async (participantId) => {
+    const { rows } = await pool.query('SELECT * FROM users WHERE participant_id = $1', [participantId]);
+    return rows[0];
   },
 
   // Get all users
-  getAllUsers: () => {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM users ORDER BY created_at DESC';
-      db.all(sql, [], (err, rows) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(rows);
-        }
-      });
-    });
+  getAllUsers: async () => {
+    const { rows } = await pool.query('SELECT * FROM users ORDER BY created_at DESC');
+    return rows;
   },
 
   // Delete user by participant ID
-  deleteUser: (participantId) => {
-    return new Promise((resolve, reject) => {
-      const sql = 'DELETE FROM users WHERE participant_id = ?';
-      db.run(sql, [participantId], function(err) {
-        if (err) {
-          reject(err);
-        } else {
-          resolve({ deleted: this.changes });
-        }
-      });
-    });
+  deleteUser: async (participantId) => {
+    const result = await pool.query('DELETE FROM users WHERE participant_id = $1', [participantId]);
+    return { deleted: result.rowCount };
   },
 
   // Find admin by username
-  findAdminByUsername: (username) => {
-    return new Promise((resolve, reject) => {
-      const sql = 'SELECT * FROM admins WHERE username = ?';
-      db.get(sql, [username], (err, row) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(row);
-        }
-      });
-    });
+  findAdminByUsername: async (username) => {
+    const { rows } = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
+    return rows[0];
   },
 
   // Verify admin credentials, returns the admin row if valid, otherwise null
