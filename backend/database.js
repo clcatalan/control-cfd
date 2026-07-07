@@ -5,14 +5,21 @@ const bcrypt = require('bcryptjs');
 const DEFAULT_ADMIN_USERNAME = 'admin';
 const DEFAULT_ADMIN_PASSWORD = 'admin123';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL environment variable is required');
+// DB_TARGET=local uses DATABASE_URL_LOCAL (your Homebrew Postgres); anything else uses DATABASE_URL (Neon)
+const useLocal = process.env.DB_TARGET === 'local';
+const connectionString = useLocal ? process.env.DATABASE_URL_LOCAL : process.env.DATABASE_URL;
+
+if (!connectionString) {
+  const missingVar = useLocal ? 'DATABASE_URL_LOCAL' : 'DATABASE_URL';
+  throw new Error(`${missingVar} environment variable is required`);
 }
 
-// Hosted Postgres providers (Neon, Supabase, Railway, Render, ...) require SSL
+console.log(`Connecting to ${useLocal ? 'local' : 'Neon'} Postgres`);
+
+// Hosted Postgres providers (Neon, Supabase, Railway, Render, ...) require SSL; local Postgres doesn't
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.PGSSL === 'false' ? false : { rejectUnauthorized: false }
+  connectionString,
+  ssl: useLocal ? false : { rejectUnauthorized: false }
 });
 
 pool.on('error', (err) => {
