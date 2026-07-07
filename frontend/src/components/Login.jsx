@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import './Login.css'
 
-const API_URL = 'http://localhost:3001/api'
+const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 
 function Login({ onLogin }) {
   const [participantId, setParticipantId] = useState('')

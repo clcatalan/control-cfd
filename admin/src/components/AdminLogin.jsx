@@ -1,20 +1,37 @@
 import React, { useState } from 'react'
 import './AdminLogin.css'
 
+const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
+
 function AdminLogin({ onLogin }) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
 
-    // Simple hardcoded admin credentials (in production, use proper authentication)
-    if (username === 'admin' && password === 'admin123') {
-      onLogin()
-    } else {
-      setError('Invalid username or password')
+    try {
+      const response = await fetch(`${API_URL}/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        onLogin()
+      } else {
+        setError(data.message || 'Invalid username or password')
+      }
+    } catch (err) {
+      console.error('Admin login error:', err)
+      setError('Unable to connect to server')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -46,11 +63,11 @@ function AdminLogin({ onLogin }) {
             />
           </div>
           {error && <div className="admin-error-message">{error}</div>}
-          <button type="submit" className="admin-login-button">
-            Login
+          <button type="submit" className="admin-login-button" disabled={loading}>
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-        <p className="admin-hint">Default credentials: admin / admin123</p>
+        <p className="admin-hint">Default credentials: admin / admin123 (change after first login)</p>
       </div>
     </div>
   )
