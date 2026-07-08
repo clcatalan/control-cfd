@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect } from 'react'
 import UsersTable from './UsersTable'
+import StudyCreation from './StudyCreation'
 import './Dashboard.css'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 
 function Dashboard({ onLogout }) {
+  const [page, setPage] = useState('users')
   /**
    * Done by AI and Human
    * 
@@ -101,33 +103,51 @@ function Dashboard({ onLogout }) {
       <div className="dashboard-header">
         <div className="header-left">
           <h1>Admin Dashboard</h1>
+          <nav className="dashboard-nav">
+            <button
+              className={`nav-btn ${page === 'users' ? 'active' : ''}`}
+              onClick={() => setPage('users')}
+            >
+              Users
+            </button>
+            <button
+              className={`nav-btn ${page === 'study-creation' ? 'active' : ''}`}
+              onClick={() => setPage('study-creation')}
+            >
+              Study Creation
+            </button>
+          </nav>
         </div>
         <div className="header-right">
           <button className="logout-btn" onClick={onLogout}>Logout</button>
         </div>
       </div>
 
-      <div className="dashboard-content">
-        <div className="content-header">
-          <h2>Registered Users</h2>
-          <div className="actions">
-            <button className="refresh-btn" onClick={fetchUsers}>
-              ↻ Refresh
-            </button>
-            <button className="add-btn" onClick={() => setShowAddModal(true)}>
-              + Add User
-            </button>
+      {page === 'study-creation' ? (
+        <StudyCreation />
+      ) : (
+        <div className="dashboard-content">
+          <div className="content-header">
+            <h2>Registered Users</h2>
+            <div className="actions">
+              <button className="refresh-btn" onClick={fetchUsers}>
+                ↻ Refresh
+              </button>
+              <button className="add-btn" onClick={() => setShowAddModal(true)}>
+                + Add User
+              </button>
+            </div>
           </div>
+
+          {error && <div className="error-banner">{error}</div>}
+
+          {loading ? (
+            <div className="loading">Loading users...</div>
+          ) : (
+            <UsersTable users={users} onDelete={handleDeleteUser} />
+          )}
         </div>
-
-        {error && <div className="error-banner">{error}</div>}
-
-        {loading ? (
-          <div className="loading">Loading users...</div>
-        ) : (
-          <UsersTable users={users} onDelete={handleDeleteUser} />
-        )}
-      </div>
+      )}
 
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
