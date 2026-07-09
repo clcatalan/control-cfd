@@ -1,5 +1,4 @@
 // Dashboard.jsx was initially AI-generated
-
 import React, { useState, useEffect } from 'react'
 import UsersTable from './UsersTable'
 import StudyCreation from './StudyCreation'

@@ -22,6 +22,9 @@ function formatDate(date) {
   return `${year}-${month}-${day}`
 }
 
+// Bypass the daily schedule lock in local dev so every problem is testable; never true in a production build.
+const unlockAllForDev = import.meta.env.DEV
+
 function ProblemList({ participantId, onSelectProblem, onLogout }) {
   const [unlockedProblemId, setUnlockedProblemId] = useState(null)
   const [loadingSchedule, setLoadingSchedule] = useState(true)
@@ -57,7 +60,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout }) {
       </div>
 
       <div className="problem-list-content">
-        {!loadingSchedule && !unlockedProblemId && (
+        {!loadingSchedule && !unlockedProblemId && !unlockAllForDev && (
           <div className="no-problem-banner">No problem is scheduled for today. Please check back later.</div>
         )}
         {weeks.map((week) => (
@@ -65,7 +68,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout }) {
             <h2 className="week-label">{week.label}</h2>
             <div className="problem-grid">
               {week.problems.map((problem) => {
-                const isUnlocked = problem.id === unlockedProblemId
+                const isUnlocked = unlockAllForDev || problem.id === unlockedProblemId
                 return (
                   <button
                     key={problem.id}
