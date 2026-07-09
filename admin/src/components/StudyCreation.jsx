@@ -41,6 +41,43 @@ function StudyCreation() {
   const [selectedDate, setSelectedDate] = useState(null)
   const [selectedProblemId, setSelectedProblemId] = useState(String(PROBLEM_IDS[0]))
   const [saving, setSaving] = useState(false)
+  const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
+  const [togglingAllProblems, setTogglingAllProblems] = useState(false)
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch(`${API_URL}/settings`)
+      const data = await response.json()
+      if (data.success) {
+        setAllProblemsEnabled(data.allProblemsEnabled)
+      }
+    } catch (err) {
+      console.error('Error fetching settings:', err)
+    }
+  }
+
+  const handleToggleAllProblems = async () => {
+    setTogglingAllProblems(true)
+    setError('')
+    try {
+      const response = await fetch(`${API_URL}/settings/all-problems-enabled`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: !allProblemsEnabled })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setAllProblemsEnabled(data.allProblemsEnabled)
+      } else {
+        setError(data.message || 'Failed to update setting')
+      }
+    } catch (err) {
+      console.error('Error toggling all problems:', err)
+      setError('Failed to update setting')
+    } finally {
+      setTogglingAllProblems(false)
+    }
+  }
 
   const fetchSchedule = async () => {
     setLoading(true)
@@ -63,6 +100,7 @@ function StudyCreation() {
 
   useEffect(() => {
     fetchSchedule()
+    fetchSettings()
   }, [])
 
   const scheduleByDate = useMemo(() => {
@@ -143,7 +181,20 @@ function StudyCreation() {
     <div className="dashboard-content">
       <div className="content-header">
         <h2>Study Creation</h2>
+        <button
+          className={`testing-toggle-btn ${allProblemsEnabled ? 'active' : ''}`}
+          onClick={handleToggleAllProblems}
+          disabled={togglingAllProblems}
+        >
+          {allProblemsEnabled ? 'Disable All Problems' : 'Enable All Problems'}
+        </button>
       </div>
+
+      {allProblemsEnabled && (
+        <div className="testing-mode-banner">
+          Testing mode is ON — all problems are unlocked for every participant, regardless of schedule.
+        </div>
+      )}
 
       {error && <div className="error-banner">{error}</div>}
 

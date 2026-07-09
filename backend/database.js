@@ -57,6 +57,20 @@ async function initializeDatabase() {
   `);
   console.log('Problem schedule table ready');
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS study_settings (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      all_problems_enabled BOOLEAN NOT NULL DEFAULT false,
+      CONSTRAINT single_row CHECK (id = 1)
+    )
+  `);
+  await pool.query(`
+    INSERT INTO study_settings (id, all_problems_enabled)
+    VALUES (1, false)
+    ON CONFLICT (id) DO NOTHING
+  `);
+  console.log('Study settings table ready');
+
   await seedDefaultAdmin();
 }
 
@@ -163,6 +177,21 @@ const dbOperations = {
   clearSchedule: async (problemId) => {
     const result = await pool.query('DELETE FROM problem_schedule WHERE problem_id = $1', [problemId]);
     return { deleted: result.rowCount };
+  },
+
+  // Get study-wide settings (e.g. the "enable all problems" testing override)
+  getSettings: async () => {
+    const { rows } = await pool.query('SELECT all_problems_enabled FROM study_settings WHERE id = 1');
+    return rows[0];
+  },
+
+  // Toggle the "enable all problems" testing override
+  setAllProblemsEnabled: async (enabled) => {
+    const { rows } = await pool.query(
+      'UPDATE study_settings SET all_problems_enabled = $1 WHERE id = 1 RETURNING all_problems_enabled',
+      [enabled]
+    );
+    return rows[0];
   }
 };
 

@@ -27,6 +27,7 @@ const unlockAllForDev = import.meta.env.DEV
 
 function ProblemList({ participantId, onSelectProblem, onLogout }) {
   const [unlockedProblemId, setUnlockedProblemId] = useState(null)
+  const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
   const [loadingSchedule, setLoadingSchedule] = useState(true)
 
   useEffect(() => {
@@ -46,7 +47,20 @@ function ProblemList({ participantId, onSelectProblem, onLogout }) {
       }
     }
 
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch(`${API_URL}/settings`)
+        const data = await response.json()
+        if (data.success) {
+          setAllProblemsEnabled(data.allProblemsEnabled)
+        }
+      } catch (err) {
+        console.error('Error fetching settings:', err)
+      }
+    }
+
     fetchSchedule()
+    fetchSettings()
   }, [])
 
   return (
@@ -60,7 +74,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout }) {
       </div>
 
       <div className="problem-list-content">
-        {!loadingSchedule && !unlockedProblemId && !unlockAllForDev && (
+        {!loadingSchedule && !unlockedProblemId && !unlockAllForDev && !allProblemsEnabled && (
           <div className="no-problem-banner">No problem is scheduled for today. Please check back later.</div>
         )}
         {weeks.map((week) => (
@@ -68,7 +82,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout }) {
             <h2 className="week-label">{week.label}</h2>
             <div className="problem-grid">
               {week.problems.map((problem) => {
-                const isUnlocked = unlockAllForDev || problem.id === unlockedProblemId
+                const isUnlocked = unlockAllForDev || allProblemsEnabled || problem.id === unlockedProblemId
                 return (
                   <button
                     key={problem.id}

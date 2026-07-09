@@ -1,3 +1,35 @@
+.testing-toggle-btn {
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #d8dcf0;
+  background: white;
+  color: #667eea;
+  transition: all 0.2s ease;
+}
+
+.testing-toggle-btn:hover {
+  background: #f0f1fc;
+}
+
+.testing-toggle-btn.active {
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
+}
+
+.testing-mode-banner {
+  background: #fff8e6;
+  color: #8a6d3b;
+  border: 1px solid #f5e3b3;
+  border-radius: 8px;
+  padding: 0.85rem 1.1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+
 .study-creation-layout {
   display: grid;
   grid-template-columns: minmax(320px, 480px) 1fr;

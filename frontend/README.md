@@ -34,9 +34,12 @@ Follow these steps to set up the project on your local device:
    ```
 
 2. **Install dependencies**
-   
+
+   Use the pinned Node version (see `.nvmrc`), then install:
+
    Using npm:
    ```bash
+   nvm use
    npm install
    ```
    
@@ -67,6 +70,7 @@ Follow these steps to set up the project on your local device:
 To start the development server with hot reload:
 
 ```bash
+nvm use
 npm run dev
 ```
 

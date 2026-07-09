@@ -301,6 +301,43 @@ app.delete('/api/schedule/:problemId', async (req, res) => {
   }
 });
 
+// Get study-wide settings (e.g. the "enable all problems" testing override)
+app.get('/api/settings', async (req, res) => {
+  try {
+    const settings = await db.getSettings();
+    res.json({ success: true, allProblemsEnabled: settings.all_problems_enabled });
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching settings'
+    });
+  }
+});
+
+// Toggle the "enable all problems" testing override (admin use)
+app.post('/api/settings/all-problems-enabled', async (req, res) => {
+  try {
+    const { enabled } = req.body;
+
+    if (typeof enabled !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        message: 'enabled must be a boolean'
+      });
+    }
+
+    const settings = await db.setAllProblemsEnabled(enabled);
+    res.json({ success: true, allProblemsEnabled: settings.all_problems_enabled });
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error updating settings'
+    });
+  }
+});
+
 // Serve the built admin app under /admin, and the built frontend app at the root.
 // Both share this same server/database, so the admin panel always reflects live data.
 app.use('/admin', express.static(ADMIN_DIST));

@@ -4,8 +4,9 @@ Node.js/Express backend with SQLite database for user authentication.
 
 ## Setup
 
-1. Install dependencies:
+1. Use the pinned Node version and install dependencies:
 ```bash
+nvm use
 npm install
 ```
 
