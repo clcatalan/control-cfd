@@ -121,14 +121,14 @@ function App() {
       </div>
       <div className="app-content">
         <div className="panel-left" style={{ width: `${leftWidth}%` }}>
-          <ProblemPanel />
+          <ProblemPanel problem={selectedProblem} />
         </div>
         <div 
           className={`resize-handle ${activeHandle === 'left' ? 'dragging' : ''}`}
           onMouseDown={() => handleMouseDown('left')}
         />
         <div className="panel-middle" style={{ width: `${middleWidth}%` }}>
-          <EditorPanel />
+          <EditorPanel problem={selectedProblem} />
         </div>
         <div 
           className={`resize-handle ${activeHandle === 'right' ? 'dragging' : ''}`}

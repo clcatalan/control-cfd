@@ -236,6 +236,71 @@ app.delete('/api/users/:participantId', async (req, res) => {
   }
 });
 
+// Get the full problem availability schedule
+app.get('/api/schedule', async (req, res) => {
+  try {
+    const schedule = await db.getSchedule();
+    res.json({ success: true, schedule });
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching schedule'
+    });
+  }
+});
+
+// Set (or move) the date a problem becomes available (admin use)
+app.post('/api/schedule', async (req, res) => {
+  try {
+    const { problemId, date } = req.body;
+
+    if (!problemId || !date) {
+      return res.status(400).json({
+        success: false,
+        message: 'problemId and date are required'
+      });
+    }
+
+    const entry = await db.setSchedule(problemId, date);
+    res.json({ success: true, schedule: entry });
+  } catch (error) {
+    console.error('Error setting schedule:', error);
+
+    if (error.message.includes('UNIQUE constraint failed')) {
+      return res.status(409).json({
+        success: false,
+        message: 'That date is already assigned to another problem'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error setting schedule'
+    });
+  }
+});
+
+// Clear a problem's scheduled date (admin use)
+app.delete('/api/schedule/:problemId', async (req, res) => {
+  try {
+    const { problemId } = req.params;
+    const result = await db.clearSchedule(problemId);
+
+    if (result.deleted > 0) {
+      res.json({ success: true, message: 'Schedule cleared' });
+    } else {
+      res.status(404).json({ success: false, message: 'No schedule found for that problem' });
+    }
+  } catch (error) {
+    console.error('Error clearing schedule:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error clearing schedule'
+    });
+  }
+});
+
 // Serve the built admin app under /admin, and the built frontend app at the root.
 // Both share this same server/database, so the admin panel always reflects live data.
 app.use('/admin', express.static(ADMIN_DIST));

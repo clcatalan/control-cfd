@@ -31,7 +31,7 @@ public:
 };`
 }
 
-function EditorPanel() {
+function EditorPanel({ problem }) {
   const [language, setLanguage] = useState('javascript')
   const [code, setCode] = useState(defaultCode.javascript)
 
@@ -46,8 +46,12 @@ function EditorPanel() {
   }
 
   const handleRun = () => {
-    console.log('Generating AI solution...')
-    alert('AI Generate Solution functionality would generate a solution here!')
+    const solution = problem?.solutions?.[language]
+    if (solution) {
+      setCode(solution)
+    } else {
+      alert(`No pre-defined ${language} solution available for this problem yet.`)
+    }
   }
 
   return (
@@ -67,7 +71,7 @@ function EditorPanel() {
         </div>
         <div className="editor-actions">
           <button className="btn-run" onClick={handleRun}>
-            AI Generate Solution
+            Generate AI Solution
           </button>
         </div>
       </div>

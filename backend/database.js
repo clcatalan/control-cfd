@@ -47,6 +47,16 @@ async function initializeDatabase() {
   `);
   console.log('Admins table ready');
 
+  // scheduled_date is stored as TEXT ('YYYY-MM-DD') rather than DATE to avoid
+  // node-postgres converting it to a JS Date and shifting it across timezones
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS problem_schedule (
+      problem_id INTEGER PRIMARY KEY,
+      scheduled_date TEXT NOT NULL UNIQUE
+    )
+  `);
+  console.log('Problem schedule table ready');
+
   await seedDefaultAdmin();
 }
 
@@ -120,6 +130,39 @@ const dbOperations = {
     }
     const isValid = bcrypt.compareSync(password, admin.password_hash);
     return isValid ? admin : null;
+  },
+
+  // Get the full problem availability schedule
+  getSchedule: async () => {
+    const { rows } = await pool.query(
+      'SELECT problem_id, scheduled_date FROM problem_schedule ORDER BY scheduled_date'
+    );
+    return rows;
+  },
+
+  // Set (or move) the date a problem becomes available
+  setSchedule: async (problemId, scheduledDate) => {
+    try {
+      const { rows } = await pool.query(
+        `INSERT INTO problem_schedule (problem_id, scheduled_date)
+         VALUES ($1, $2)
+         ON CONFLICT (problem_id) DO UPDATE SET scheduled_date = EXCLUDED.scheduled_date
+         RETURNING problem_id, scheduled_date`,
+        [problemId, scheduledDate]
+      );
+      return rows[0];
+    } catch (err) {
+      if (err.code === UNIQUE_VIOLATION) {
+        throw new Error('UNIQUE constraint failed: problem_schedule.scheduled_date');
+      }
+      throw err;
+    }
+  },
+
+  // Clear a problem's scheduled date
+  clearSchedule: async (problemId) => {
+    const result = await pool.query('DELETE FROM problem_schedule WHERE problem_id = $1', [problemId]);
+    return { deleted: result.rowCount };
   }
 };
 

@@ -1,0 +1,10 @@
+Problem 1: https://leetcode.com/problems/frequency-of-the-most-frequent-element/description/
+Problem 2: https://leetcode.com/problems/solve-the-equation/description/
+Problem 3: https://leetcode.com/problems/basic-calculator-ii/description/
+Problem 4: https://leetcode.com/problems/minimum-removals-to-balance-array/description/
+Problem 5: https://leetcode.com/problems/word-search/description/
+Problem 6: https://leetcode.com/problems/special-array-ii/description/
+Problem 7: https://leetcode.com/problems/asteroid-collision/description/
+Problem 8: https://leetcode.com/problems/lru-cache/description/
+Problem 9: https://leetcode.com/problems/number-of-sets-of-k-non-overlapping-line-segments/description/
+Problem 10: https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/description/

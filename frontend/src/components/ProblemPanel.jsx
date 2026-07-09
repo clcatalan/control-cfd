@@ -1,38 +1,10 @@
 import React, { useState } from 'react'
 import './ProblemPanel.css'
+import leetcodeProblems from '../data/leetcodeProblems'
 
-const sampleProblem = {
-  id: 1,
-  title: "1. Two Sum",
-  difficulty: "Easy",
-  description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.",
-  examples: [
-    {
-      input: "nums = [2,7,11,15], target = 9",
-      output: "[0,1]",
-      explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]."
-    },
-    {
-      input: "nums = [3,2,4], target = 6",
-      output: "[1,2]",
-      explanation: ""
-    },
-    {
-      input: "nums = [3,3], target = 6",
-      output: "[0,1]",
-      explanation: ""
-    }
-  ],
-  constraints: [
-    "2 <= nums.length <= 10⁴",
-    "-10⁹ <= nums[i] <= 10⁹",
-    "-10⁹ <= target <= 10⁹",
-    "Only one valid answer exists."
-  ]
-}
-
-function ProblemPanel() {
+function ProblemPanel({ problem }) {
   const [activeTab, setActiveTab] = useState('description')
+  const activeProblem = problem || leetcodeProblems[0]
 
   const getDifficultyClass = (difficulty) => {
     switch(difficulty.toLowerCase()) {
@@ -58,18 +30,18 @@ function ProblemPanel() {
         {activeTab === 'description' && (
           <>
             <div className="problem-header">
-              <h1>{sampleProblem.title}</h1>
-              <span className={`difficulty ${getDifficultyClass(sampleProblem.difficulty)}`}>
-                {sampleProblem.difficulty}
+              <h1>{activeProblem.title}</h1>
+              <span className={`difficulty ${getDifficultyClass(activeProblem.difficulty)}`}>
+                {activeProblem.difficulty}
               </span>
             </div>
 
             <div className="problem-description">
-              <p>{sampleProblem.description}</p>
+              <p>{activeProblem.description}</p>
             </div>
 
             <div className="examples">
-              {sampleProblem.examples.map((example, index) => (
+              {activeProblem.examples.map((example, index) => (
                 <div key={index} className="example">
                   <strong>Example {index + 1}:</strong>
                   <div className="example-content">
@@ -92,7 +64,7 @@ function ProblemPanel() {
             <div className="constraints">
               <strong>Constraints:</strong>
               <ul>
-                {sampleProblem.constraints.map((constraint, index) => (
+                {activeProblem.constraints.map((constraint, index) => (
                   <li key={index}>{constraint}</li>
                 ))}
               </ul>

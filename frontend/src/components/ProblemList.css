@@ -90,10 +90,41 @@
   border-color: #c8cdf0;
 }
 
+.problem-card.locked {
+  cursor: not-allowed;
+  background: #f4f5fa;
+  color: #b0b4c4;
+}
+
+.problem-card.locked:hover {
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border-color: #e4e6f0;
+}
+
+.problem-card.locked .problem-title {
+  color: #b0b4c4;
+}
+
+.problem-lock-icon {
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
 .problem-title {
   font-size: 1rem;
   color: #2c3e50;
   font-weight: 600;
+}
+
+.no-problem-banner {
+  background: #fff8e6;
+  color: #8a6d3b;
+  border: 1px solid #f5e3b3;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 900px) {
