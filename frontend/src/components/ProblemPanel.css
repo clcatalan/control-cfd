@@ -1,5 +1,5 @@
 .problem-panel {
-  height: 100vh;
+  height: 100%;
   background-color: #1a1a1a;
   display: flex;
   flex-direction: column;

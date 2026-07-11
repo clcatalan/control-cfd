@@ -15,6 +15,8 @@ function ProblemPanel({ problem }) {
     }
   }
 
+  const titleWithoutLeetcodeNumber = activeProblem.title.replace(/^\d+\.\s*/, '')
+
   return (
     <div className="problem-panel">
       <div className="problem-tabs">
@@ -30,7 +32,7 @@ function ProblemPanel({ problem }) {
         {activeTab === 'description' && (
           <>
             <div className="problem-header">
-              <h1>{activeProblem.title}</h1>
+              <h1>Problem {activeProblem.id}: {titleWithoutLeetcodeNumber}</h1>
               <span className={`difficulty ${getDifficultyClass(activeProblem.difficulty)}`}>
                 {activeProblem.difficulty}
               </span>
