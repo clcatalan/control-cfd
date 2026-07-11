@@ -1,15 +1,19 @@
+# correct solution
+# class Solution:
+#     def shiftingLetters(self, s: str, shifts: List[int]) -> str:
+#         result = list(s)
+#         total = 0
+#         for i in range(len(s) - 1, -1, -1):
+#             total = (total + shifts[i]) % 26
+#             shifted = (ord(s[i]) - ord('a') + total) % 26
+#             result[i] = chr(ord('a') + shifted)
+#         return ''.join(result)
+
+# contains synthetic error - shifts only the i-th character by shifts[i] instead of accumulating shifts for all characters up to i
 class Solution:
-    def numberOfSets(self, n: int, k: int) -> int:
-        MOD = 10 ** 9 + 7
-        # dp[i] = ways to place the current number of segments using points 0..i
-        dp = [1] * n
-
-        for _ in range(k):
-            new_dp = [0] * n
-            prefix = 0
-            for i in range(n):
-                new_dp[i] = ((new_dp[i - 1] if i > 0 else 0) + prefix) % MOD
-                prefix = (prefix + dp[i]) % MOD
-            dp = new_dp
-
-        return dp[-1] % MOD
+    def shiftingLetters(self, s: str, shifts: List[int]) -> str:
+        result = list(s)
+        for i in range(len(s) - 1, -1, -1):
+            shifted = (ord(s[i]) - ord('a') + shifts[i]) % 26
+            result[i] = chr(ord('a') + shifted)
+        return ''.join(result)

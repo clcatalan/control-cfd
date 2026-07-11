@@ -1,14 +1,26 @@
 /**
  * @param {number[]} nums
- * @param {number[][]} queries
- * @return {boolean[]}
+ * @param {number} target
+ * @return {number}
  */
-var isArraySpecial = function(nums, queries) {
-    const n = nums.length;
-    const prefix = new Array(n).fill(0);
-    for (let i = 1; i < n; i++) {
-        prefix[i] = prefix[i - 1] + (nums[i] % 2 !== nums[i - 1] % 2 ? 0 : 1);
+var search = function(nums, target) {
+    let left = 0, right = nums.length - 1;
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        if (nums[mid] === target) return mid;
+        if (nums[left] <= nums[mid]) {
+            if (nums[left] <= target && target < nums[mid]) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        } else {
+            if (nums[mid] < target && target <= nums[right]) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
     }
-
-    return queries.map(([l, r]) => prefix[r] - prefix[l] === 0);
+    return -1;
 };

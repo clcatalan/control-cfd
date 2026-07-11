@@ -39,7 +39,7 @@ private:
                 // synthetic error on next line
                 if (sign.empty() && sign == "+") coef += 1;
                 // correct code on next line
-                if (sign.empty() || sign == "+") coef += 1;
+                // if (sign.empty() || sign == "+") coef += 1;
                 else if (sign == "-") coef -= 1;
                 else coef += stoi(sign);
             } else {

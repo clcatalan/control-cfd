@@ -1,19 +1,25 @@
+// correct solution
+// class Solution {
+//     public String shiftingLetters(String s, int[] shifts) {
+//         char[] result = s.toCharArray();
+//         long total = 0;
+//         for (int i = s.length() - 1; i >= 0; i--) {
+//             total = (total + shifts[i]) % 26;
+//             int shifted = (int) ((result[i] - 'a' + total) % 26);
+//             result[i] = (char) ('a' + shifted);
+//         }
+//         return new String(result);
+//     }
+// }
+
+// contains synthetic error - shifts only the i-th character by shifts[i] instead of accumulating shifts for all characters up to i
 class Solution {
-    public int numberOfSets(int n, int k) {
-        final int MOD = 1_000_000_007;
-        long[] dp = new long[n];
-        Arrays.fill(dp, 1);
-
-        for (int iter = 0; iter < k; iter++) {
-            long[] newDp = new long[n];
-            long prefix = 0;
-            for (int i = 0; i < n; i++) {
-                newDp[i] = ((i > 0 ? newDp[i - 1] : 0) + prefix) % MOD;
-                prefix = (prefix + dp[i]) % MOD;
-            }
-            dp = newDp;
+    public String shiftingLetters(String s, int[] shifts) {
+        char[] result = s.toCharArray();
+        for (int i = s.length() - 1; i >= 0; i--) {
+            int shifted = (int) ((result[i] - 'a' + shifts[i]) % 26);
+            result[i] = (char) ('a' + shifted);
         }
-
-        return (int) (dp[n - 1] % MOD);
+        return new String(result);
     }
 }

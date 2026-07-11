@@ -1,17 +1,24 @@
 class Solution {
 public:
-    vector<bool> isArraySpecial(vector<int>& nums, vector<vector<int>>& queries) {
-        int n = nums.size();
-        vector<int> prefix(n, 0);
-        for (int i = 1; i < n; i++) {
-            prefix[i] = prefix[i - 1] + (nums[i] % 2 != nums[i - 1] % 2 ? 0 : 1);
+    int search(vector<int>& nums, int target) {
+        int left = 0, right = nums.size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] == target) return mid;
+            if (nums[left] <= nums[mid]) {
+                if (nums[left] <= target && target < nums[mid]) {
+                    right = mid - 1;
+                } else {
+                    left = mid + 1;
+                }
+            } else {
+                if (nums[mid] < target && target <= nums[right]) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
         }
-
-        vector<bool> answer;
-        answer.reserve(queries.size());
-        for (auto& q : queries) {
-            answer.push_back(prefix[q[1]] - prefix[q[0]] == 0);
-        }
-        return answer;
+        return -1;
     }
 };

@@ -7,5 +7,8 @@ class Solution:
         for right in range(n):
             while nums[right] > nums[left] * k:
                 left += 1
-            best = max(best, right - left + 1)
+            # synthetic error on next line
+            best = max(best, right - left - 1)
+            # correct solution on next line
+            # best = max(best, right - left + 1)
         return n - best

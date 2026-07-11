@@ -12,7 +12,10 @@ var minRemoval = function(nums, k) {
         while (nums[right] > nums[left] * k) {
             left++;
         }
-        best = Math.max(best, right - left + 1);
+        // synthetic error on next line
+        best = Math.max(best, right - left - 1);
+        // correct solution on next line
+        // best = Math.max(best, right - left + 1);
     }
     return n - best;
 };

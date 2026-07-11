@@ -1,19 +1,27 @@
+// correct solution
+// class Solution {
+// public:
+//     string shiftingLetters(string s, vector<int>& shifts) {
+//         string result = s;
+//         long long total = 0;
+//         for (int i = (int) s.size() - 1; i >= 0; i--) {
+//             total = (total + shifts[i]) % 26;
+//             int shifted = (int) ((result[i] - 'a' + total) % 26);
+//             result[i] = 'a' + shifted;
+//         }
+//         return result;
+//     }
+// };
+
+// contains synthetic error - shifts only the i-th character by shifts[i] instead of accumulating shifts for all characters up to i
 class Solution {
 public:
-    int numberOfSets(int n, int k) {
-        const long long MOD = 1e9 + 7;
-        vector<long long> dp(n, 1);
-
-        for (int iter = 0; iter < k; iter++) {
-            vector<long long> newDp(n, 0);
-            long long prefix = 0;
-            for (int i = 0; i < n; i++) {
-                newDp[i] = ((i > 0 ? newDp[i - 1] : 0) + prefix) % MOD;
-                prefix = (prefix + dp[i]) % MOD;
-            }
-            dp = newDp;
+    string shiftingLetters(string s, vector<int>& shifts) {
+        string result = s;
+        for (int i = (int) s.size() - 1; i >= 0; i--) {
+            int shifted = (int) ((result[i] - 'a' + shifts[i]) % 26);
+            result[i] = 'a' + shifted;
         }
-
-        return (int) (dp[n - 1] % MOD);
+        return result;
     }
 };

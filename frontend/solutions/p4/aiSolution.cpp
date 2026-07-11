@@ -9,7 +9,10 @@ public:
             while ((long long) nums[right] > (long long) nums[left] * k) {
                 left++;
             }
-            best = max(best, right - left + 1);
+            // synthetic error on next line
+            best = max(best, right - left - 1);
+            // correct solution on next line
+            // best = max(best, right - left + 1);
         }
         return n - best;
     }

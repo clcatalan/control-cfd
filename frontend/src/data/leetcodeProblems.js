@@ -5,19 +5,19 @@ const leetcodeProblems = [
     difficulty: 'Medium',
     url: 'https://leetcode.com/problems/frequency-of-the-most-frequent-element/description/',
     description:
-      "You are given an integer array nums and an integer k. In one operation, you can choose an index of nums and increment the element at that index by 1.\n\nReturn the maximum possible frequency of an element after performing at most k operations.",
+      "The frequency of an element is the number of times it occurs in an array.\n\nYou are given an integer array nums and an integer k. In one operation, you can choose an index of nums and increment the element at that index by 1.\n\nReturn the maximum possible frequency of an element after performing at most k operations.",
     examples: [
       {
         input: 'nums = [1,2,4], k = 5',
         output: '3',
         explanation:
-          'Increment the first element three times and the second element two times to make nums = [4,4,4]. 5 total increments were used.',
+          'Increment the first element three times and the second element two times to make nums = [4,4,4]. 4 has a frequency of 3.',
       },
       {
         input: 'nums = [1,4,8,13], k = 5',
         output: '2',
         explanation:
-          'There are multiple optimal solutions:\n- Increment the first element three times to make nums = [4,4,8,13]. 3 total increments were used.\n- Increment the second element four times to make nums = [1,8,8,13]. 4 total increments were used.\n- Increment the third element five times to make nums = [1,4,13,13]. 5 total increments were used.',
+          'There are multiple optimal solutions:\n- Increment the first element three times to make nums = [4,4,8,13]. 4 has a frequency of 2.\n- Increment the second element four times to make nums = [1,8,8,13]. 8 has a frequency of 2.\n- Increment the third element five times to make nums = [1,4,13,13]. 13 has a frequency of 2.',
       },
       {
         input: 'nums = [3,9,6], k = 2',
@@ -117,7 +117,7 @@ public:
       '3 <= equation.length <= 1000',
       "equation has exactly one '='.",
       "equation consists of integers with an absolute value in the range [0, 100] without any leading zeros, and the variable 'x'.",
-      'The input is guaranteed to be valid.',
+      'The input is generated that if there is a single solution, it will be an integer.',
     ],
     solutions: {
       python: `class Solution:
@@ -130,7 +130,7 @@ public:
                     continue
                 if 'x' in term:
                     sign = term[:-1]
-                    if sign == '' or sign == '+':
+                    if sign == '' and sign == '+':
                         coef += 1
                     elif sign == '-':
                         coef -= 1
@@ -163,7 +163,7 @@ var solveEquation = function(equation) {
             if (term === '') continue;
             if (term.includes('x')) {
                 const sign = term.slice(0, -1);
-                if (sign === '' || sign === '+') coef += 1;
+                if (sign === '' && sign === '+') coef += 1;
                 else if (sign === '-') coef -= 1;
                 else coef += parseInt(sign, 10);
             } else {
@@ -207,7 +207,7 @@ var solveEquation = function(equation) {
             if (term.isEmpty()) continue;
             if (term.contains("x")) {
                 String sign = term.substring(0, term.length() - 1);
-                if (sign.isEmpty() || sign.equals("+")) coef += 1;
+                if (sign.isEmpty() && sign.equals("+")) coef += 1;
                 else if (sign.equals("-")) coef -= 1;
                 else coef += Integer.parseInt(sign);
             } else {
@@ -255,7 +255,159 @@ private:
             if (term.empty()) continue;
             if (term.find('x') != string::npos) {
                 string sign = term.substr(0, term.size() - 1);
-                if (sign.empty() || sign == "+") coef += 1;
+                if (sign.empty() && sign == "+") coef += 1;
+                else if (sign == "-") coef -= 1;
+                else coef += stoi(sign);
+            } else {
+                constant += stoi(term);
+            }
+        }
+        return {coef, constant};
+    }
+};`,
+    },
+    aiSolution: {
+      python: `class Solution:
+    def solveEquation(self, equation: str) -> str:
+        def parse(expr):
+            expr = expr.replace('-', '+-')
+            coef = const = 0
+            for term in expr.split('+'):
+                if not term:
+                    continue
+                if 'x' in term:
+                    sign = term[:-1]
+                    # synthetic error on next line
+                    if sign == '' and sign == '+':
+                        coef += 1
+                    elif sign == '-':
+                        coef -= 1
+                    else:
+                        coef += int(sign)
+                else:
+                    const += int(term)
+            return coef, const
+
+        left, right = equation.split('=')
+        coefL, constL = parse(left)
+        coefR, constR = parse(right)
+
+        coef = coefL - coefR
+        const = constR - constL
+
+        if coef == 0:
+            return "Infinite solutions" if const == 0 else "No solution"
+        return f"x={const // coef}"`,
+      javascript: `/**
+ * @param {string} equation
+ * @return {string}
+ */
+// contains synthetic error
+var solveEquation = function(equation) {
+    const parse = (expr) => {
+        expr = expr.split('-').join('+-');
+        let coef = 0;
+        let const_ = 0;
+        for (const term of expr.split('+')) {
+            if (term === '') continue;
+            if (term.includes('x')) {
+                const sign = term.slice(0, -1);
+                // synthetic error on next line
+                if (sign === '' && sign === '+') coef += 1;
+                else if (sign === '-') coef -= 1;
+                else coef += parseInt(sign, 10);
+            } else {
+                const_ += parseInt(term, 10);
+            }
+        }
+        return [coef, const_];
+    };
+
+    const [left, right] = equation.split('=');
+    const [coefL, constL] = parse(left);
+    const [coefR, constR] = parse(right);
+
+    const coef = coefL - coefR;
+    const constant = constR - constL;
+
+    if (coef === 0) {
+        return constant === 0 ? "Infinite solutions" : "No solution";
+    }
+    return \`x=\${constant / coef}\`;
+};`,
+      java: `class Solution {
+    public String solveEquation(String equation) {
+        String[] sides = equation.split("=");
+        int[] left = parse(sides[0]);
+        int[] right = parse(sides[1]);
+
+        int coef = left[0] - right[0];
+        int constant = right[1] - left[1];
+
+        if (coef == 0) {
+            return constant == 0 ? "Infinite solutions" : "No solution";
+        }
+        return "x=" + (constant / coef);
+    }
+
+    private int[] parse(String expr) {
+        expr = expr.replace("-", "+-");
+        int coef = 0, constant = 0;
+        for (String term : expr.split("\\\\+")) {
+            if (term.isEmpty()) continue;
+            if (term.contains("x")) {
+                String sign = term.substring(0, term.length() - 1);
+                // synthetic error on next line
+                if (sign.isEmpty() && sign.equals("+")) coef += 1;
+                else if (sign.equals("-")) coef -= 1;
+                else coef += Integer.parseInt(sign);
+            } else {
+                constant += Integer.parseInt(term);
+            }
+        }
+        return new int[]{coef, constant};
+    }
+}`,
+      cpp: `class Solution {
+public:
+    string solveEquation(string equation) {
+        int eq = equation.find('=');
+        string left = equation.substr(0, eq);
+        string right = equation.substr(eq + 1);
+
+        auto [coefL, constL] = parse(left);
+        auto [coefR, constR] = parse(right);
+
+        int coef = coefL - coefR;
+        int constant = constR - constL;
+
+        if (coef == 0) {
+            return constant == 0 ? "Infinite solutions" : "No solution";
+        }
+        return "x=" + to_string(constant / coef);
+    }
+
+private:
+    pair<int, int> parse(string expr) {
+        string normalized;
+        for (char c : expr) {
+            if (c == '-') {
+                normalized += '+';
+                normalized += '-';
+            } else {
+                normalized += c;
+            }
+        }
+
+        int coef = 0, constant = 0;
+        stringstream ss(normalized);
+        string term;
+        while (getline(ss, term, '+')) {
+            if (term.empty()) continue;
+            if (term.find('x') != string::npos) {
+                string sign = term.substr(0, term.size() - 1);
+                // synthetic error on next line
+                if (sign.empty() && sign == "+") coef += 1;
                 else if (sign == "-") coef -= 1;
                 else coef += stoi(sign);
             } else {
@@ -273,17 +425,17 @@ private:
     difficulty: 'Medium',
     url: 'https://leetcode.com/problems/basic-calculator-ii/description/',
     description:
-      "Given a string s which represents an expression, evaluate this expression and return its value.\n\nThe integer division should truncate toward zero.\n\nYou may assume that the given expression is always valid. All intermediate results will be in the range of [-2^31, 2^31 - 1].\n\nNote: You are not allowed to use any built-in function which evaluates strings as mathematical expressions, such as eval().",
+      "Given a string s which represents an expression, evaluate this expression and return its value.\n\nThe integer division should truncate toward zero.\n\nYou may assume that the given expression is always valid. All intermediate results will be in the range of [(-2^31), (2^31) - 1].\n\nNote: You are not allowed to use any built-in function which evaluates strings as mathematical expressions, such as eval().",
     examples: [
       { input: 's = "3+2*2"', output: '7', explanation: '' },
       { input: 's = " 3/2 "', output: '1', explanation: '' },
       { input: 's = " 3+5 / 2 "', output: '5', explanation: '' },
     ],
     constraints: [
-      '1 <= s.length <= 3 * 10^5',
+      '1 <= s.length <= 3 * (10^5)',
       "s consists of integers and operators ('+', '-', '*', '/') separated by some number of spaces.",
       's represents a valid expression.',
-      'All the integers in the expression are non-negative integers in the range [0, 2^31 - 1].',
+      'All the integers in the expression are non-negative integers in the range [0, (2^31) - 1].',
       'The answer is guaranteed to fit in a 32-bit integer.',
     ],
     solutions: {
@@ -393,24 +545,24 @@ public:
     difficulty: 'Medium',
     url: 'https://leetcode.com/problems/minimum-removals-to-balance-array/description/',
     description:
-      'You are given an integer array nums and an integer k. An array is considered balanced if the value of its maximum element is at most k times the value of its minimum element.\n\nYou may remove any number of elements from nums without making it empty. Return the minimum number of elements to remove so that the remaining array is balanced.\n\nNote: An array of size 1 is considered balanced, since its maximum and minimum are equal.',
+      'You are given an integer array nums and an integer k. \n An array is considered balanced if the value of its maximum element is at most k times the minimum element.\n\nYou may remove any number of elements from nums without making it empty. \n Return the minimum number of elements to remove so that the remaining array is balanced.\n\nNote: An array of size 1 is considered balanced, since its maximum and minimum are equal, and the condition always holds true.',
     examples: [
       {
         input: 'nums = [2,1,5], k = 2',
         output: '1',
         explanation:
-          'Remove nums[2] = 5 to get nums = [2,1]. Now max = 2, min = 1, and max <= min * k since 2 <= 1 * 2.',
+          'Remove nums[2] = 5 to get nums = [2,1]. Now max = 2, min = 1, and max <= min * k since 2 <= 1 * 2. Thus the answer is 1',
       },
       {
         input: 'nums = [1,6,2,9], k = 3',
         output: '2',
         explanation:
-          'Remove nums[0] = 1 and nums[3] = 9 to get nums = [6,2]. Now max = 6, min = 2, and max <= min * k since 6 <= 2 * 3.',
+          'Remove nums[0] = 1 and nums[3] = 9 to get nums = [6,2]. Now max = 6, min = 2, and max <= min * k since 6 <= 2 * 3. Thus the answer is 2',
       },
       {
-        input: 'nums = [2,4], k = 4',
+        input: 'nums = [4,6], k = 2',
         output: '0',
-        explanation: 'nums is already balanced since 4 <= 2 * 4, so no elements need to be removed.',
+        explanation: 'nums is already balanced since 6 <= 4 * 2, no elements need to be removed.',
       },
     ],
     constraints: [
@@ -428,7 +580,7 @@ public:
         for right in range(n):
             while nums[right] > nums[left] * k:
                 left += 1
-            best = max(best, right - left + 1)
+            best = max(best, right - left - 1)
         return n - best`,
       javascript: `/**
  * @param {number[]} nums
@@ -444,7 +596,7 @@ var minRemoval = function(nums, k) {
         while (nums[right] > nums[left] * k) {
             left++;
         }
-        best = Math.max(best, right - left + 1);
+        best = Math.max(best, right - left - 1);
     }
     return n - best;
 };`,
@@ -458,7 +610,7 @@ var minRemoval = function(nums, k) {
             while ((long) nums[right] > (long) nums[left] * k) {
                 left++;
             }
-            best = Math.max(best, right - left + 1);
+            best = Math.max(best, right - left - 1);
         }
         return n - best;
     }
@@ -474,7 +626,73 @@ public:
             while ((long long) nums[right] > (long long) nums[left] * k) {
                 left++;
             }
-            best = max(best, right - left + 1);
+            best = max(best, right - left - 1);
+        }
+        return n - best;
+    }
+};`,
+    },
+    aiSolution: {
+      python: `class Solution:
+    def minRemoval(self, nums: List[int], k: int) -> int:
+        nums.sort()
+        n = len(nums)
+        left = 0
+        best = 1
+        for right in range(n):
+            while nums[right] > nums[left] * k:
+                left += 1
+            # synthetic error on next line
+            best = max(best, right - left - 1)
+        return n - best`,
+      javascript: `/**
+ * @param {number[]} nums
+ * @param {number} k
+ * @return {number}
+ */
+var minRemoval = function(nums, k) {
+    nums.sort((a, b) => a - b);
+    const n = nums.length;
+    let left = 0;
+    let best = 1;
+    for (let right = 0; right < n; right++) {
+        while (nums[right] > nums[left] * k) {
+            left++;
+        }
+        // synthetic error on next line
+        best = Math.max(best, right - left - 1);
+    }
+    return n - best;
+};`,
+      java: `class Solution {
+    public int minRemoval(int[] nums, int k) {
+        Arrays.sort(nums);
+        int n = nums.length;
+        int left = 0;
+        int best = 1;
+        for (int right = 0; right < n; right++) {
+            while ((long) nums[right] > (long) nums[left] * k) {
+                left++;
+            }
+            // synthetic error on next line
+            best = Math.max(best, right - left - 1);
+        }
+        return n - best;
+    }
+}`,
+      cpp: `class Solution {
+public:
+    int minRemoval(vector<int>& nums, int k) {
+        sort(nums.begin(), nums.end());
+        int n = nums.size();
+        int left = 0;
+        int best = 1;
+        for (int right = 0; right < n; right++) {
+            while ((long long) nums[right] > (long long) nums[left] * k) {
+                left++;
+            }
+            // synthetic error on next line
+            best = max(best, right - left - 1);
         }
         return n - best;
     }
@@ -634,85 +852,125 @@ private:
   },
   {
     id: 6,
-    title: '3152. Special Array II',
+    title: '33. Search in Rotated Sorted Array',
     difficulty: 'Medium',
-    url: 'https://leetcode.com/problems/special-array-ii/description/',
+    url: 'https://leetcode.com/problems/search-in-rotated-sorted-array/description/',
     description:
-      "An array is considered special if every pair of its adjacent elements contains two numbers with different parity.\n\nYou are given an array of integers nums and a 2D integer matrix queries, where for queries[i] = [from_i, to_i] your task is to check that subarray nums[from_i..to_i] is special or not.\n\nReturn an array of booleans answer such that for each query, answer[i] is true if nums[from_i..to_i] is special, or false otherwise.",
+      'There is an integer array nums sorted in ascending order (with distinct values).\n\nPrior to being passed to your function, nums is possibly rotated at an unknown index k (1 <= k < nums.length) such that the resulting array is [nums[k], nums[k+1], ..., nums[n-1], nums[0], nums[1], ..., nums[k-1]] (0-indexed). For example, [0,1,2,4,5,6,7] might be left rotated by 3 indices and become [4,5,6,7,0,1,2].\n\nGiven the array nums after the possible rotation and an integer target, return the index of target if it is in nums, or -1 if it is not in nums.\n\n',
     examples: [
       {
-        input: 'nums = [3,4,1,2,6], queries = [[0,4]]',
-        output: '[false]',
-        explanation: 'The subarray is [3,4,1,2,6]. 2 and 6 are both even, so it is not special.',
+        input: 'nums = [4,5,6,7,0,1,2], target = 0',
+        output: '4',
+        explanation: '0 is found at index 4.',
       },
       {
-        input: 'nums = [4,3,1,6], queries = [[0,2],[2,3]]',
-        output: '[false,true]',
-        explanation:
-          'The subarray [4,3,1] has adjacent elements with different parity, so it is special.\nThe subarray [1,6] has adjacent elements with different parity, so it is special.',
+        input: 'nums = [4,5,6,7,0,1,2], target = 3',
+        output: '-1',
+        explanation: '3 is not in the array, so -1 is returned.',
+      },
+      {
+        input: 'nums = [1], target = 0',
+        output: '-1',
+        explanation: '0 is not in the array, so -1 is returned.',
       },
     ],
     constraints: [
-      '1 <= nums.length <= 10^5',
-      '1 <= nums[i] <= 10^5',
-      '1 <= queries.length <= 1.5 * 10^5',
-      'queries[i].length == 2',
-      '0 <= from_i <= to_i <= nums.length - 1',
+      '1 <= nums.length <= 5000',
+      '-10^4 <= nums[i] <= 10^4',
+      'All values of nums are unique.',
+      'nums is an ascending array that is possibly rotated.',
+      '-10^4 <= target <= 10^4',
     ],
     solutions: {
       python: `class Solution:
-    def isArraySpecial(self, nums: List[int], queries: List[List[int]]) -> List[bool]:
-        n = len(nums)
-        prefix = [0] * n
-        for i in range(1, n):
-            prefix[i] = prefix[i - 1] + (0 if nums[i] % 2 != nums[i - 1] % 2 else 1)
-
-        return [prefix[r] - prefix[l] == 0 for l, r in queries]`,
+    def search(self, nums: List[int], target: int) -> int:
+        left, right = 0, len(nums) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if nums[mid] == target:
+                return mid
+            if nums[left] <= nums[mid]:
+                if nums[left] <= target < nums[mid]:
+                    right = mid - 1
+                else:
+                    left = mid + 1
+            else:
+                if nums[mid] < target <= nums[right]:
+                    left = mid + 1
+                else:
+                    right = mid - 1
+        return -1`,
       javascript: `/**
  * @param {number[]} nums
- * @param {number[][]} queries
- * @return {boolean[]}
+ * @param {number} target
+ * @return {number}
  */
-var isArraySpecial = function(nums, queries) {
-    const n = nums.length;
-    const prefix = new Array(n).fill(0);
-    for (let i = 1; i < n; i++) {
-        prefix[i] = prefix[i - 1] + (nums[i] % 2 !== nums[i - 1] % 2 ? 0 : 1);
+var search = function(nums, target) {
+    let left = 0, right = nums.length - 1;
+    while (left <= right) {
+        const mid = Math.floor((left + right) / 2);
+        if (nums[mid] === target) return mid;
+        if (nums[left] <= nums[mid]) {
+            if (nums[left] <= target && target < nums[mid]) {
+                right = mid - 1;
+            } else {
+                left = mid + 1;
+            }
+        } else {
+            if (nums[mid] < target && target <= nums[right]) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
     }
-
-    return queries.map(([l, r]) => prefix[r] - prefix[l] === 0);
+    return -1;
 };`,
       java: `class Solution {
-    public boolean[] isArraySpecial(int[] nums, int[][] queries) {
-        int n = nums.length;
-        int[] prefix = new int[n];
-        for (int i = 1; i < n; i++) {
-            prefix[i] = prefix[i - 1] + (nums[i] % 2 != nums[i - 1] % 2 ? 0 : 1);
+    public int search(int[] nums, int target) {
+        int left = 0, right = nums.length - 1;
+        while (left <= right) {
+            int mid = (left + right) / 2;
+            if (nums[mid] == target) return mid;
+            if (nums[left] <= nums[mid]) {
+                if (nums[left] <= target && target < nums[mid]) {
+                    right = mid - 1;
+                } else {
+                    left = mid + 1;
+                }
+            } else {
+                if (nums[mid] < target && target <= nums[right]) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
         }
-
-        boolean[] answer = new boolean[queries.length];
-        for (int i = 0; i < queries.length; i++) {
-            int l = queries[i][0], r = queries[i][1];
-            answer[i] = prefix[r] - prefix[l] == 0;
-        }
-        return answer;
+        return -1;
     }
 }`,
       cpp: `class Solution {
 public:
-    vector<bool> isArraySpecial(vector<int>& nums, vector<vector<int>>& queries) {
-        int n = nums.size();
-        vector<int> prefix(n, 0);
-        for (int i = 1; i < n; i++) {
-            prefix[i] = prefix[i - 1] + (nums[i] % 2 != nums[i - 1] % 2 ? 0 : 1);
+    int search(vector<int>& nums, int target) {
+        int left = 0, right = nums.size() - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (nums[mid] == target) return mid;
+            if (nums[left] <= nums[mid]) {
+                if (nums[left] <= target && target < nums[mid]) {
+                    right = mid - 1;
+                } else {
+                    left = mid + 1;
+                }
+            } else {
+                if (nums[mid] < target && target <= nums[right]) {
+                    left = mid + 1;
+                } else {
+                    right = mid - 1;
+                }
+            }
         }
-
-        vector<bool> answer;
-        answer.reserve(queries.size());
-        for (auto& q : queries) {
-            answer.push_back(prefix[q[1]] - prefix[q[0]] == 0);
-        }
-        return answer;
+        return -1;
     }
 };`,
     },
@@ -723,11 +981,12 @@ public:
     difficulty: 'Medium',
     url: 'https://leetcode.com/problems/asteroid-collision/description/',
     description:
-      'We are given an array asteroids of integers representing asteroids in a row. For each asteroid, the absolute value represents its size, and the sign represents its direction (positive meaning right, negative meaning left). Each asteroid moves at the same speed.\n\nFind out the state of the asteroids after all collisions. If two asteroids meet, the smaller one will explode. If both are the same size, both will explode. Two asteroids moving in the same direction will never meet.',
+      'We are given an array asteroids of integers representing asteroids in a row.  The indices of the asteroid in the array represent their relative position in space. \n\n For each asteroid, the absolute value represents its size, and the sign represents its direction (positive meaning right, negative meaning left). Each asteroid moves at the same speed.\n\nFind out the state of the asteroids after all collisions. If two asteroids meet, the smaller one will explode. If both are the same size, both will explode. Two asteroids moving in the same direction will never meet.',
     examples: [
       { input: 'asteroids = [5,10,-5]', output: '[5,10]', explanation: 'The 10 and -5 collide resulting in 10. The 5 and 10 never collide.' },
       { input: 'asteroids = [8,-8]', output: '[]', explanation: 'The 8 and -8 collide exploding each other.' },
       { input: 'asteroids = [10,2,-5]', output: '[10]', explanation: 'The 2 and -5 collide resulting in -5. The 10 and -5 collide resulting in 10.' },
+      { input: 'asteroids = [3,5,-6,2,-1,4]', output: '[-6,2,4]', explanation: 'The asteroid -6 makes the asteroid 3 and 5 explode, and then continues going left. On the other side, the asteroid 2 destroys -1. Since 2 and 4 are both moving right, they never collide.' },
     ],
     constraints: [
       '2 <= asteroids.length <= 10^4',
@@ -737,83 +996,172 @@ public:
     solutions: {
       python: `class Solution:
     def asteroidCollision(self, asteroids: List[int]) -> List[int]:
-        stack = []
+        queue = deque()
         for a in asteroids:
             alive = True
-            while alive and a < 0 and stack and stack[-1] > 0:
-                if stack[-1] < -a:
-                    stack.pop()
+            while alive and a < 0 and queue and queue[0] > 0:
+                if queue[0] < -a:
+                    queue.popleft()
                     continue
-                elif stack[-1] == -a:
-                    stack.pop()
+                elif queue[0] == -a:
+                    queue.popleft()
                 alive = False
             if alive:
-                stack.append(a)
-        return stack`,
+                queue.append(a)
+        return list(queue)`,
       javascript: `/**
  * @param {number[]} asteroids
  * @return {number[]}
  */
 var asteroidCollision = function(asteroids) {
-    const stack = [];
+    const queue = [];
     for (const a of asteroids) {
         let alive = true;
-        while (alive && a < 0 && stack.length && stack[stack.length - 1] > 0) {
-            const top = stack[stack.length - 1];
-            if (top < -a) {
-                stack.pop();
+        while (alive && a < 0 && queue.length && queue[0] > 0) {
+            const front = queue[0];
+            if (front < -a) {
+                queue.shift();
                 continue;
-            } else if (top === -a) {
-                stack.pop();
+            } else if (front === -a) {
+                queue.shift();
             }
             alive = false;
         }
-        if (alive) stack.push(a);
+        if (alive) queue.push(a);
     }
-    return stack;
+    return queue;
 };`,
       java: `class Solution {
     public int[] asteroidCollision(int[] asteroids) {
-        Deque<Integer> stack = new ArrayDeque<>();
+        Queue<Integer> queue = new LinkedList<>();
         for (int a : asteroids) {
             boolean alive = true;
-            while (alive && a < 0 && !stack.isEmpty() && stack.peekLast() > 0) {
-                int top = stack.peekLast();
-                if (top < -a) {
-                    stack.pollLast();
+            while (alive && a < 0 && !queue.isEmpty() && queue.peek() > 0) {
+                int front = queue.peek();
+                if (front < -a) {
+                    queue.poll();
                     continue;
-                } else if (top == -a) {
-                    stack.pollLast();
+                } else if (front == -a) {
+                    queue.poll();
                 }
                 alive = false;
             }
-            if (alive) stack.addLast(a);
+            if (alive) queue.add(a);
         }
 
-        int[] result = new int[stack.size()];
+        int[] result = new int[queue.size()];
         int i = 0;
-        for (int val : stack) result[i++] = val;
+        for (int val : queue) result[i++] = val;
         return result;
     }
 }`,
       cpp: `class Solution {
 public:
     vector<int> asteroidCollision(vector<int>& asteroids) {
-        vector<int> stack;
+        deque<int> queue;
         for (int a : asteroids) {
             bool alive = true;
-            while (alive && a < 0 && !stack.empty() && stack.back() > 0) {
-                if (stack.back() < -a) {
-                    stack.pop_back();
+            while (alive && a < 0 && !queue.empty() && queue.front() > 0) {
+                if (queue.front() < -a) {
+                    queue.pop_front();
                     continue;
-                } else if (stack.back() == -a) {
-                    stack.pop_back();
+                } else if (queue.front() == -a) {
+                    queue.pop_front();
                 }
                 alive = false;
             }
-            if (alive) stack.push_back(a);
+            if (alive) queue.push_back(a);
         }
-        return stack;
+        return vector<int>(queue.begin(), queue.end());
+    }
+};`,
+    },
+    aiSolution: {
+      python: `# contains synthetic error - uses queue instead of stack
+from collections import deque
+
+class Solution:
+    def asteroidCollision(self, asteroids: List[int]) -> List[int]:
+        queue = deque()
+        for a in asteroids:
+            alive = True
+            while alive and a < 0 and queue and queue[0] > 0:
+                if queue[0] < -a:
+                    queue.popleft()
+                    continue
+                elif queue[0] == -a:
+                    queue.popleft()
+                alive = False
+            if alive:
+                queue.append(a)
+        return list(queue)`,
+      javascript: `// contains synthetic error - uses queue instead of stack
+/**
+ * @param {number[]} asteroids
+ * @return {number[]}
+ */
+var asteroidCollision = function(asteroids) {
+    const queue = [];
+    for (const a of asteroids) {
+        let alive = true;
+        while (alive && a < 0 && queue.length && queue[0] > 0) {
+            const front = queue[0];
+            if (front < -a) {
+                queue.shift();
+                continue;
+            } else if (front === -a) {
+                queue.shift();
+            }
+            alive = false;
+        }
+        if (alive) queue.push(a);
+    }
+    return queue;
+};`,
+      java: `// contains synthetic error - uses queue instead of stack
+class Solution {
+    public int[] asteroidCollision(int[] asteroids) {
+        Queue<Integer> queue = new LinkedList<>();
+        for (int a : asteroids) {
+            boolean alive = true;
+            while (alive && a < 0 && !queue.isEmpty() && queue.peek() > 0) {
+                int front = queue.peek();
+                if (front < -a) {
+                    queue.poll();
+                    continue;
+                } else if (front == -a) {
+                    queue.poll();
+                }
+                alive = false;
+            }
+            if (alive) queue.add(a);
+        }
+
+        int[] result = new int[queue.size()];
+        int i = 0;
+        for (int val : queue) result[i++] = val;
+        return result;
+    }
+}`,
+      cpp: `// contains synthetic error - uses queue instead of stack
+class Solution {
+public:
+    vector<int> asteroidCollision(vector<int>& asteroids) {
+        deque<int> queue;
+        for (int a : asteroids) {
+            bool alive = true;
+            while (alive && a < 0 && !queue.empty() && queue.front() > 0) {
+                if (queue.front() < -a) {
+                    queue.pop_front();
+                    continue;
+                } else if (queue.front() == -a) {
+                    queue.pop_front();
+                }
+                alive = false;
+            }
+            if (alive) queue.push_back(a);
+        }
+        return vector<int>(queue.begin(), queue.end());
     }
 };`,
     },
@@ -824,21 +1172,21 @@ public:
     difficulty: 'Medium',
     url: 'https://leetcode.com/problems/lru-cache/description/',
     description:
-      "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\nImplement the LRUCache class:\n- LRUCache(int capacity) Initialize the LRU cache with positive size capacity.\n- int get(int key) Return the value of the key if the key exists, otherwise return -1.\n- void put(int key, int value) Update the value of the key if the key exists. Otherwise, add the key-value pair to the cache. If the number of keys exceeds the capacity from this operation, evict the least recently used key.",
+      "Design a data structure that follows the constraints of a Least Recently Used (LRU) cache.\n\nImplement the LRUCache class:\n- LRUCache(int capacity) Initialize the LRU cache with positive size capacity.\n- int get(int key) Return the value of the key if the key exists, otherwise return -1.\n- void put(int key, int value) Update the value of the key if the key exists. Otherwise, add the key-value pair to the cache. If the number of keys exceeds the capacity from this operation, evict the least recently used key. \n\n",
     examples: [
       {
         input:
           '["LRUCache", "put", "put", "get", "put", "get", "put", "get", "get", "get"]\n[[2], [1, 1], [2, 2], [1], [3, 3], [2], [4, 4], [1], [3], [4]]',
         output: '[null, null, null, 1, null, -1, null, -1, 3, 4]',
         explanation:
-          'LRUCache lRUCache = new LRUCache(2);\nlRUCache.put(1, 1);\nlRUCache.put(2, 2);\nlRUCache.get(1);    // return 1\nlRUCache.put(3, 3); // evicts key 2\nlRUCache.get(2);    // returns -1 (not found)\nlRUCache.put(4, 4); // evicts key 1\nlRUCache.get(1);    // return -1 (not found)\nlRUCache.get(3);    // return 3\nlRUCache.get(4);    // return 4',
+          'LRUCache lRUCache = new LRUCache(2);\nlRUCache.put(1, 1) // cache is {1=1};\nlRUCache.put(2, 2); // cache is {1=1, 2=2}\nlRUCache.get(1);    // return 1\nlRUCache.put(3, 3); // LRU key was 2, evicts key 2, cache is {1=1, 3=3}\nlRUCache.get(2);    // returns -1 (not found)\nlRUCache.put(4, 4); // LRU key was 1, evicts key 1, cache is {4=4, 3=3}\nlRUCache.get(1);    // return -1 (not found)\nlRUCache.get(3);    // return 3\nlRUCache.get(4);    // return 4',
       },
     ],
     constraints: [
       '1 <= capacity <= 3000',
       '0 <= key <= 10^4',
       '0 <= value <= 10^5',
-      'At most 2 * 10^5 calls will be made to get and put.',
+      'At most 2 * (10^5) calls will be made to get and put.',
     ],
     solutions: {
       python: `from collections import OrderedDict
@@ -952,95 +1300,113 @@ private:
   },
   {
     id: 9,
-    title: '1621. Number of Sets of K Non-Overlapping Line Segments',
+    title: '848. Shifting Letters',
     difficulty: 'Medium',
-    url: 'https://leetcode.com/problems/number-of-sets-of-k-non-overlapping-line-segments/description/',
+    url: 'https://leetcode.com/problems/shifting-letters/description/',
     description:
-      'Given n points on a 1-D plane, where the ith point (from 0 to n-1) is at x = i, find the number of ways we can draw exactly k non-overlapping line segments such that each segment covers two or more points. The endpoints of each line segment must have integral coordinates. The k line segments do not have to cover all n points, and they are allowed to share endpoints.\n\nReturn the number of ways we can draw k non-overlapping line segments. Since this number can be huge, return it modulo 10^9 + 7.',
+      "You are given a string s of lowercase English letters and an integer array shifts of the same length.\n\nCall the shift() of a letter, the next letter in the alphabet, wrapping around so that 'z' becomes 'a' (shift('a') = 'b', shift('t') = 'u', shift('z') = 'a').\n\nFor each shifts[i] = x, shift the first i + 1 letters of s, x times.\n\nReturn the final string after all such shifts to s are applied.",
     examples: [
       {
-        input: 'n = 4, k = 2',
-        output: '5',
+        input: 's = "abc", shifts = [3,5,9]',
+        output: '"rpl"',
         explanation:
-          'The two line segments are shown in red and blue. The image above shows the 5 different ways {(0,2),(2,3)}, {(0,1),(1,3)}, {(0,1),(2,3)}, {(1,2),(2,3)}, {(0,1),(1,2)}.',
+          'We start with "abc".\nAfter shifting the first 1 letters of s by 3, we have "dbc".\nAfter shifting the first 2 letters of s by 5, we have "igc".\nAfter shifting the first 3 letters of s by 9, we have "rpl", the answer.',
       },
-      { input: 'n = 3, k = 1', output: '3', explanation: '' },
-      { input: 'n = 30, k = 7', output: '796297179', explanation: '' },
+      { input: 's = "aaa", shifts = [1,2,3]', output: '"gfd"', explanation: '' },
     ],
-    constraints: ['2 <= n <= 1000', '1 <= k <= n - 1'],
+    constraints: [
+      '1 <= s.length <= 10^5',
+      's consists of lowercase English letters.',
+      'shifts.length == s.length',
+      '0 <= shifts[i] <= 10^9',
+    ],
     solutions: {
       python: `class Solution:
-    def numberOfSets(self, n: int, k: int) -> int:
-        MOD = 10 ** 9 + 7
-        # dp[i] = ways to place the current number of segments using points 0..i
-        dp = [1] * n
-
-        for _ in range(k):
-            new_dp = [0] * n
-            prefix = 0
-            for i in range(n):
-                new_dp[i] = ((new_dp[i - 1] if i > 0 else 0) + prefix) % MOD
-                prefix = (prefix + dp[i]) % MOD
-            dp = new_dp
-
-        return dp[-1] % MOD`,
+    def shiftingLetters(self, s: str, shifts: List[int]) -> str:
+        result = list(s)
+        for i in range(len(s) - 1, -1, -1):
+            shifted = (ord(s[i]) - ord('a') + shifts[i]) % 26
+            result[i] = chr(ord('a') + shifted)
+        return ''.join(result)`,
       javascript: `/**
- * @param {number} n
- * @param {number} k
- * @return {number}
+ * @param {string} s
+ * @param {number[]} shifts
+ * @return {string}
  */
-var numberOfSets = function(n, k) {
-    const MOD = 1000000007;
-    let dp = new Array(n).fill(1);
-
-    for (let iter = 0; iter < k; iter++) {
-        const newDp = new Array(n).fill(0);
-        let prefix = 0;
-        for (let i = 0; i < n; i++) {
-            newDp[i] = ((i > 0 ? newDp[i - 1] : 0) + prefix) % MOD;
-            prefix = (prefix + dp[i]) % MOD;
-        }
-        dp = newDp;
+var shiftingLetters = function(s, shifts) {
+    const result = s.split('');
+    for (let i = s.length - 1; i >= 0; i--) {
+        const shifted = (s.charCodeAt(i) - 97 + shifts[i]) % 26;
+        result[i] = String.fromCharCode(97 + shifted);
     }
-
-    return dp[n - 1];
+    return result.join('');
 };`,
       java: `class Solution {
-    public int numberOfSets(int n, int k) {
-        final int MOD = 1_000_000_007;
-        long[] dp = new long[n];
-        Arrays.fill(dp, 1);
-
-        for (int iter = 0; iter < k; iter++) {
-            long[] newDp = new long[n];
-            long prefix = 0;
-            for (int i = 0; i < n; i++) {
-                newDp[i] = ((i > 0 ? newDp[i - 1] : 0) + prefix) % MOD;
-                prefix = (prefix + dp[i]) % MOD;
-            }
-            dp = newDp;
+    public String shiftingLetters(String s, int[] shifts) {
+        char[] result = s.toCharArray();
+        for (int i = s.length() - 1; i >= 0; i--) {
+            int shifted = (int) ((result[i] - 'a' + shifts[i]) % 26);
+            result[i] = (char) ('a' + shifted);
         }
-
-        return (int) (dp[n - 1] % MOD);
+        return new String(result);
     }
 }`,
       cpp: `class Solution {
 public:
-    int numberOfSets(int n, int k) {
-        const long long MOD = 1e9 + 7;
-        vector<long long> dp(n, 1);
-
-        for (int iter = 0; iter < k; iter++) {
-            vector<long long> newDp(n, 0);
-            long long prefix = 0;
-            for (int i = 0; i < n; i++) {
-                newDp[i] = ((i > 0 ? newDp[i - 1] : 0) + prefix) % MOD;
-                prefix = (prefix + dp[i]) % MOD;
-            }
-            dp = newDp;
+    string shiftingLetters(string s, vector<int>& shifts) {
+        string result = s;
+        for (int i = (int) s.size() - 1; i >= 0; i--) {
+            int shifted = (int) ((result[i] - 'a' + shifts[i]) % 26);
+            result[i] = 'a' + shifted;
         }
-
-        return (int) (dp[n - 1] % MOD);
+        return result;
+    }
+};`,
+    },
+    aiSolution: {
+      python: `# contains synthetic error - shifts only the i-th character by shifts[i] instead of accumulating shifts for all characters up to i
+class Solution:
+    def shiftingLetters(self, s: str, shifts: List[int]) -> str:
+        result = list(s)
+        for i in range(len(s) - 1, -1, -1):
+            shifted = (ord(s[i]) - ord('a') + shifts[i]) % 26
+            result[i] = chr(ord('a') + shifted)
+        return ''.join(result)`,
+      javascript: `// contains synthetic error - shifts only the i-th character by shifts[i] instead of accumulating shifts for all characters up to i
+/**
+ * @param {string} s
+ * @param {number[]} shifts
+ * @return {string}
+ */
+var shiftingLetters = function(s, shifts) {
+    const result = s.split('');
+    for (let i = s.length - 1; i >= 0; i--) {
+        const shifted = (s.charCodeAt(i) - 97 + shifts[i]) % 26;
+        result[i] = String.fromCharCode(97 + shifted);
+    }
+    return result.join('');
+};`,
+      java: `// contains synthetic error - shifts only the i-th character by shifts[i] instead of accumulating shifts for all characters up to i
+class Solution {
+    public String shiftingLetters(String s, int[] shifts) {
+        char[] result = s.toCharArray();
+        for (int i = s.length() - 1; i >= 0; i--) {
+            int shifted = (int) ((result[i] - 'a' + shifts[i]) % 26);
+            result[i] = (char) ('a' + shifted);
+        }
+        return new String(result);
+    }
+}`,
+      cpp: `// contains synthetic error - shifts only the i-th character by shifts[i] instead of accumulating shifts for all characters up to i
+class Solution {
+public:
+    string shiftingLetters(string s, vector<int>& shifts) {
+        string result = s;
+        for (int i = (int) s.size() - 1; i >= 0; i--) {
+            int shifted = (int) ((result[i] - 'a' + shifts[i]) % 26);
+            result[i] = 'a' + shifted;
+        }
+        return result;
     }
 };`,
     },
@@ -1051,7 +1417,7 @@ public:
     difficulty: 'Medium',
     url: 'https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/description/',
     description:
-      'Given an array of integers nums sorted in non-decreasing order, find the starting and ending position of a given target value.\n\nIf target is not found in the array, return [-1, -1].\n\nYou must write an algorithm with O(log n) runtime complexity.',
+      'Given an array of integers nums sorted in non-decreasing order, find the starting and ending position of a given target value.\n\nIf target is not found in the array, return [-1, -1].\n\n',
     examples: [
       { input: 'nums = [5,7,7,8,8,10], target = 8', output: '[3,4]', explanation: '' },
       { input: 'nums = [5,7,7,8,8,10], target = 6', output: '[-1,-1]', explanation: '' },
@@ -1071,7 +1437,7 @@ class Solution:
         left = bisect.bisect_left(nums, target)
         if left == len(nums) or nums[left] != target:
             return [-1, -1]
-        right = bisect.bisect_right(nums, target) - 1
+        right = bisect.bisect_left(nums, target) - 1
         return [left, right]`,
       javascript: `/**
  * @param {number[]} nums
@@ -1091,14 +1457,14 @@ var searchRange = function(nums, target) {
 
     const left = lowerBound(target);
     if (left === nums.length || nums[left] !== target) return [-1, -1];
-    const right = lowerBound(target + 1) - 1;
+    const right = lowerBound(target) - 1;
     return [left, right];
 };`,
       java: `class Solution {
     public int[] searchRange(int[] nums, int target) {
         int left = lowerBound(nums, target);
         if (left == nums.length || nums[left] != target) return new int[]{-1, -1};
-        int right = lowerBound(nums, target + 1) - 1;
+        int right = lowerBound(nums, target) - 1;
         return new int[]{left, right};
     }
 
@@ -1117,7 +1483,7 @@ public:
     vector<int> searchRange(vector<int>& nums, int target) {
         int left = (int)(lower_bound(nums.begin(), nums.end(), target) - nums.begin());
         if (left == (int) nums.size() || nums[left] != target) return {-1, -1};
-        int right = (int)(lower_bound(nums.begin(), nums.end(), target + 1) - nums.begin()) - 1;
+        int right = (int)(lower_bound(nums.begin(), nums.end(), target) - nums.begin()) - 1;
         return {left, right};
     }
 };`,

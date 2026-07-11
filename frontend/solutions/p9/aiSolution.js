@@ -1,21 +1,31 @@
+// correct solution
+// /**
+//  * @param {string} s
+//  * @param {number[]} shifts
+//  * @return {string}
+//  */
+// var shiftingLetters = function(s, shifts) {
+//     const result = s.split('');
+//     let total = 0;
+//     for (let i = s.length - 1; i >= 0; i--) {
+//         total = (total + shifts[i]) % 26;
+//         const shifted = (s.charCodeAt(i) - 97 + total) % 26;
+//         result[i] = String.fromCharCode(97 + shifted);
+//     }
+//     return result.join('');
+// };
+
+// contains synthetic error - shifts only the i-th character by shifts[i] instead of accumulating shifts for all characters up to i
 /**
- * @param {number} n
- * @param {number} k
- * @return {number}
+ * @param {string} s
+ * @param {number[]} shifts
+ * @return {string}
  */
-var numberOfSets = function(n, k) {
-    const MOD = 1000000007;
-    let dp = new Array(n).fill(1);
-
-    for (let iter = 0; iter < k; iter++) {
-        const newDp = new Array(n).fill(0);
-        let prefix = 0;
-        for (let i = 0; i < n; i++) {
-            newDp[i] = ((i > 0 ? newDp[i - 1] : 0) + prefix) % MOD;
-            prefix = (prefix + dp[i]) % MOD;
-        }
-        dp = newDp;
+var shiftingLetters = function(s, shifts) {
+    const result = s.split('');
+    for (let i = s.length - 1; i >= 0; i--) {
+        const shifted = (s.charCodeAt(i) - 97 + shifts[i]) % 26;
+        result[i] = String.fromCharCode(97 + shifted);
     }
-
-    return dp[n - 1];
+    return result.join('');
 };

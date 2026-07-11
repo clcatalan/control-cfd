@@ -1,8 +1,18 @@
 class Solution:
-    def isArraySpecial(self, nums: List[int], queries: List[List[int]]) -> List[bool]:
-        n = len(nums)
-        prefix = [0] * n
-        for i in range(1, n):
-            prefix[i] = prefix[i - 1] + (0 if nums[i] % 2 != nums[i - 1] % 2 else 1)
-
-        return [prefix[r] - prefix[l] == 0 for l, r in queries]
+    def search(self, nums: List[int], target: int) -> int:
+        left, right = 0, len(nums) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            if nums[mid] == target:
+                return mid
+            if nums[left] <= nums[mid]:
+                if nums[left] <= target < nums[mid]:
+                    right = mid - 1
+                else:
+                    left = mid + 1
+            else:
+                if nums[mid] < target <= nums[right]:
+                    left = mid + 1
+                else:
+                    right = mid - 1
+        return -1
