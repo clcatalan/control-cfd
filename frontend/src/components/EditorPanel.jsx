@@ -3,41 +3,19 @@ import Editor from '@monaco-editor/react'
 import './EditorPanel.css'
 
 const defaultCode = {
-  javascript: `/**
- * @param {number[]} nums
- * @param {number} target
- * @return {number[]}
- */
-var twoSum = function(nums, target) {
-    // Write your solution here
-    
-};`,
-  python: `class Solution:
-    def twoSum(self, nums: List[int], target: int) -> List[int]:
-        # Write your solution here
-        pass`,
-  java: `class Solution {
-    public int[] twoSum(int[] nums, int target) {
-        // Write your solution here
-        
-    }
-}`,
-  cpp: `class Solution {
-public:
-    vector<int> twoSum(vector<int>& nums, int target) {
-        // Write your solution here
-        
-    }
-};`
+  javascript: ``,
+  python: ``,
+  java: ``,
+  cpp: ``
 }
 
-function EditorPanel({ problem }) {
-  const [language, setLanguage] = useState('javascript')
-  const [code, setCode] = useState(defaultCode.javascript)
+function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onGenerateComplete }) {
+  const [code, setCode] = useState(null)
+  const [isGenerating, setIsGenerating] = useState(false)
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value
-    setLanguage(newLang)
+    onLanguageChange(newLang)
     setCode(defaultCode[newLang])
   }
 
@@ -48,7 +26,13 @@ function EditorPanel({ problem }) {
   const handleRun = () => {
     const solution = problem?.solutions?.[language]
     if (solution) {
-      setCode(solution)
+      setIsGenerating(true)
+      onGenerateStart?.()
+      setTimeout(() => {
+        setCode(solution)
+        setIsGenerating(false)
+        onGenerateComplete?.()
+      }, 3000)
     } else {
       alert(`No pre-defined ${language} solution available for this problem yet.`)
     }
@@ -70,13 +54,18 @@ function EditorPanel({ problem }) {
           </select>
         </div>
         <div className="editor-actions">
-          <button className="btn-run" onClick={handleRun}>
-            Generate AI Solution
+          <button className="btn-run" onClick={handleRun} disabled={isGenerating}>
+            {isGenerating ? 'Generating...' : 'Generate AI Solution'}
           </button>
         </div>
       </div>
 
       <div className="editor-container">
+        {isGenerating && (
+          <div className="editor-loading-overlay">
+            <div className="spinner" />
+          </div>
+        )}
         <Editor
           height="100%"
           language={language}
@@ -84,6 +73,8 @@ function EditorPanel({ problem }) {
           onChange={handleEditorChange}
           theme="vs-dark"
           options={{
+            readOnly: true,
+            domReadOnly: true,
             minimap: { enabled: false },
             fontSize: 14,
             fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace",
@@ -93,8 +84,9 @@ function EditorPanel({ problem }) {
             wordWrap: 'on',
             lineNumbers: 'on',
             renderLineHighlight: 'all',
-            suggestOnTriggerCharacters: true,
-            quickSuggestions: true,
+            suggestOnTriggerCharacters: false,
+            quickSuggestions: false,
+            contextmenu: false,
             padding: { top: 16, bottom: 16 }
           }}
         />

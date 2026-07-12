@@ -25,7 +25,7 @@ function formatDate(date) {
 // Bypass the daily schedule lock in local dev so every problem is testable; never true in a production build.
 const unlockAllForDev = import.meta.env.DEV
 
-function ProblemList({ participantId, onSelectProblem, onLogout }) {
+function ProblemList({ participantId, onSelectProblem, onLogout, completedProblemIds = [] }) {
   const [unlockedProblemId, setUnlockedProblemId] = useState(null)
   const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
   const [loadingSchedule, setLoadingSchedule] = useState(true)
@@ -83,16 +83,18 @@ function ProblemList({ participantId, onSelectProblem, onLogout }) {
             <div className="problem-grid">
               {week.problems.map((problem) => {
                 const isUnlocked = unlockAllForDev || allProblemsEnabled || problem.id === unlockedProblemId
+                const isCompleted = completedProblemIds.includes(problem.id)
                 return (
                   <button
                     key={problem.id}
-                    className={`problem-card ${isUnlocked ? '' : 'locked'}`}
-                    disabled={!isUnlocked}
-                    title={isUnlocked ? undefined : 'Not available today'}
-                    onClick={() => isUnlocked && onSelectProblem && onSelectProblem(problem)}
+                    className={`problem-card ${isUnlocked ? '' : 'locked'} ${isCompleted ? 'completed' : ''}`}
+                    disabled={!isUnlocked || isCompleted}
+                    title={isCompleted ? 'Already completed' : isUnlocked ? undefined : 'Not available today'}
+                    onClick={() => isUnlocked && !isCompleted && onSelectProblem && onSelectProblem(problem)}
                   >
                     <span className="problem-title">Problem {problem.id}</span>
-                    {!isUnlocked && <span className="problem-lock-icon">🔒</span>}
+                    {isCompleted && <span className="problem-done-badge">Done</span>}
+                    {!isCompleted && !isUnlocked && <span className="problem-lock-icon">🔒</span>}
                   </button>
                 )
               })}

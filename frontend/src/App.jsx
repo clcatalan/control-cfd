@@ -11,9 +11,23 @@ function App() {
   const [participantId, setParticipantId] = useState('')
   const [userData, setUserData] = useState(null)
   const [selectedProblem, setSelectedProblem] = useState(null)
+  const [language, setLanguage] = useState('javascript')
+  const [aiSolutionGenerated, setAiSolutionGenerated] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
   const [leftWidth, setLeftWidth] = useState(30)
   const [middleWidth, setMiddleWidth] = useState(40)
   const [activeHandle, setActiveHandle] = useState(null)
+  const [completedProblemIds, setCompletedProblemIds] = useState([])
+
+  const loadCompletedProblemIds = (id) => {
+    try {
+      const stored = localStorage.getItem(`completedProblems_${id}`)
+      return stored ? JSON.parse(stored) : []
+    } catch (err) {
+      console.error('Error loading completed problems:', err)
+      return []
+    }
+  }
 
   // Check if user is already logged in (from localStorage)
   useEffect(() => {
@@ -25,6 +39,7 @@ function App() {
       if (storedUserData) {
         setUserData(JSON.parse(storedUserData))
       }
+      setCompletedProblemIds(loadCompletedProblemIds(storedParticipantId))
     }
   }, [])
 
@@ -32,6 +47,7 @@ function App() {
     setParticipantId(id)
     setUserData(user)
     setIsLoggedIn(true)
+    setCompletedProblemIds(loadCompletedProblemIds(id))
     localStorage.setItem('participantId', id)
     localStorage.setItem('userData', JSON.stringify(user))
   }
@@ -41,8 +57,43 @@ function App() {
     setParticipantId('')
     setUserData(null)
     setSelectedProblem(null)
+    setCompletedProblemIds([])
     localStorage.removeItem('participantId')
     localStorage.removeItem('userData')
+  }
+
+  const handleSelectProblem = (problem) => {
+    setSelectedProblem(problem)
+    setAiSolutionGenerated(false)
+    setIsGenerating(false)
+  }
+
+  const handleLanguageChange = (newLanguage) => {
+    setLanguage(newLanguage)
+    setAiSolutionGenerated(false)
+    setIsGenerating(false)
+  }
+
+  const handleGenerateStart = () => {
+    setAiSolutionGenerated(false)
+    setIsGenerating(true)
+  }
+
+  const handleGenerateComplete = () => {
+    setIsGenerating(false)
+    setAiSolutionGenerated(true)
+  }
+
+  const handleSolutionResolved = (problemId) => {
+    setCompletedProblemIds((prev) => {
+      if (prev.includes(problemId)) {
+        return prev
+      }
+      const updated = [...prev, problemId]
+      localStorage.setItem(`completedProblems_${participantId}`, JSON.stringify(updated))
+      return updated
+    })
+    setSelectedProblem(null)
   }
 
   const handleMouseDown = (handle) => {
@@ -97,8 +148,9 @@ function App() {
     return (
       <ProblemList
         participantId={participantId}
-        onSelectProblem={setSelectedProblem}
+        onSelectProblem={handleSelectProblem}
         onLogout={handleLogout}
+        completedProblemIds={completedProblemIds}
       />
     )
   }
@@ -128,14 +180,26 @@ function App() {
           onMouseDown={() => handleMouseDown('left')}
         />
         <div className="panel-middle" style={{ width: `${middleWidth}%` }}>
-          <EditorPanel problem={selectedProblem} />
+          <EditorPanel
+            problem={selectedProblem}
+            language={language}
+            onLanguageChange={handleLanguageChange}
+            onGenerateStart={handleGenerateStart}
+            onGenerateComplete={handleGenerateComplete}
+          />
         </div>
-        <div 
+        <div
           className={`resize-handle ${activeHandle === 'right' ? 'dragging' : ''}`}
           onMouseDown={() => handleMouseDown('right')}
         />
         <div className="panel-right" style={{ width: `${rightWidth}%` }}>
-          <ExplanationPanel />
+          <ExplanationPanel
+            problem={selectedProblem}
+            language={language}
+            visible={aiSolutionGenerated}
+            isGenerating={isGenerating}
+            onResolved={handleSolutionResolved}
+          />
         </div>
       </div>
     </div>

@@ -1,0 +1,107 @@
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: confirm-dialog-fade-in 0.15s ease-out;
+}
+
+.confirm-dialog {
+  background-color: #262626;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  animation: confirm-dialog-scale-in 0.15s ease-out;
+}
+
+.confirm-dialog-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 8px 0;
+}
+
+.confirm-dialog-message {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #d1d1d1;
+  margin: 0 0 20px 0;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.confirm-dialog-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-dialog-btn-cancel {
+  background-color: #3c3c3c;
+  color: #fff;
+}
+
+.confirm-dialog-btn-cancel:hover {
+  background-color: #4c4c4c;
+}
+
+.confirm-dialog-btn-confirm.confirm-dialog-btn-accept {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.confirm-dialog-btn-confirm.confirm-dialog-btn-accept:hover {
+  background-color: #218838;
+}
+
+.confirm-dialog-btn-confirm.confirm-dialog-btn-reject {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.confirm-dialog-btn-confirm.confirm-dialog-btn-reject:hover {
+  background-color: #c82333;
+}
+
+.confirm-dialog-btn-confirm.confirm-dialog-btn-default {
+  background-color: #0a84ff;
+  color: #fff;
+}
+
+.confirm-dialog-btn-confirm.confirm-dialog-btn-default:hover {
+  background-color: #0972db;
+}
+
+@keyframes confirm-dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes confirm-dialog-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

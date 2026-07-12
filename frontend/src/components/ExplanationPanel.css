@@ -65,33 +65,6 @@
   margin: 0 0 12px 0;
 }
 
-.complexity-badges {
-  display: flex;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.badge {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: 'Courier New', monospace;
-}
-
-.badge strong {
-  margin-right: 6px;
-}
-
-.time-complexity {
-  background-color: rgba(0, 184, 163, 0.2);
-  color: #00b8a3;
-}
-
-.space-complexity {
-  background-color: rgba(138, 119, 255, 0.2);
-  color: #8a77ff;
-}
-
 .explanation-text {
   line-height: 1.7;
   color: #d1d1d1;
@@ -99,47 +72,60 @@
   white-space: pre-line;
 }
 
-.steps-list {
-  padding-left: 24px;
-  margin: 0;
+.explanation-line-block {
+  margin-bottom: 16px;
 }
 
-.steps-list li {
-  padding: 8px 0;
-  color: #d1d1d1;
-  line-height: 1.6;
+.explanation-line-block:last-child {
+  margin-bottom: 0;
 }
 
-.steps-list li::marker {
-  color: #0a84ff;
-  font-weight: bold;
+.explanation-line-block .explanation-text {
+  margin-top: 6px;
 }
 
-.example-walkthrough {
-  background-color: #262626;
-  padding: 16px;
-  border-radius: 8px;
-  border-left: 3px solid #0a84ff;
-  color: #d1d1d1;
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 0;
-  overflow-x: auto;
-  white-space: pre;
+.line-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #7ab8ff;
+  background-color: rgba(10, 132, 255, 0.12);
+  border: 1px solid rgba(10, 132, 255, 0.3);
+  border-radius: 4px;
+  padding: 2px 8px;
 }
 
-.example-walkthrough::-webkit-scrollbar {
-  height: 6px;
+.line-breadcrumb::before {
+  content: '#';
+  color: rgba(122, 184, 255, 0.6);
 }
 
-.example-walkthrough::-webkit-scrollbar-track {
-  background: #1a1a1a;
+.explanation-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 200px;
 }
 
-.example-walkthrough::-webkit-scrollbar-thumb {
-  background: #3c3c3c;
-  border-radius: 3px;
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #3c3c3c;
+  border-top-color: #0a84ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .explanation-footer {
@@ -190,4 +176,12 @@
 
 .btn-reject:active {
   transform: translateY(0);
+}
+
+.btn-accept:disabled,
+.btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
