@@ -40,6 +40,10 @@
   background: #f9f9fd;
 }
 
+.user-row {
+  cursor: pointer;
+}
+
 .participant-id {
   font-weight: 600;
   color: #2c3e50;

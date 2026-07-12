@@ -6,6 +6,8 @@ import Login from './components/Login'
 import ProblemList from './components/ProblemList'
 import './App.css'
 
+const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [participantId, setParticipantId] = useState('')
@@ -19,12 +21,17 @@ function App() {
   const [activeHandle, setActiveHandle] = useState(null)
   const [completedProblemIds, setCompletedProblemIds] = useState([])
 
-  const loadCompletedProblemIds = (id) => {
+  // The backend is the source of truth for which problems a participant has completed
+  const fetchCompletedProblemIds = async (id) => {
     try {
-      const stored = localStorage.getItem(`completedProblems_${id}`)
-      return stored ? JSON.parse(stored) : []
+      const response = await fetch(`${API_URL}/users/${id}/progress`)
+      const data = await response.json()
+      if (data.success) {
+        return data.progress.filter((problem) => problem.completed).map((problem) => problem.id)
+      }
+      return []
     } catch (err) {
-      console.error('Error loading completed problems:', err)
+      console.error('Error fetching completed problems:', err)
       return []
     }
   }
@@ -39,15 +46,15 @@ function App() {
       if (storedUserData) {
         setUserData(JSON.parse(storedUserData))
       }
-      setCompletedProblemIds(loadCompletedProblemIds(storedParticipantId))
+      fetchCompletedProblemIds(storedParticipantId).then(setCompletedProblemIds)
     }
   }, [])
 
-  const handleLogin = (id, user) => {
+  const handleLogin = async (id, user) => {
     setParticipantId(id)
     setUserData(user)
     setIsLoggedIn(true)
-    setCompletedProblemIds(loadCompletedProblemIds(id))
+    setCompletedProblemIds(await fetchCompletedProblemIds(id))
     localStorage.setItem('participantId', id)
     localStorage.setItem('userData', JSON.stringify(user))
   }
@@ -85,15 +92,14 @@ function App() {
   }
 
   const handleSolutionResolved = (problemId) => {
-    setCompletedProblemIds((prev) => {
-      if (prev.includes(problemId)) {
-        return prev
-      }
-      const updated = [...prev, problemId]
-      localStorage.setItem(`completedProblems_${participantId}`, JSON.stringify(updated))
-      return updated
-    })
+    setCompletedProblemIds((prev) => (prev.includes(problemId) ? prev : [...prev, problemId]))
     setSelectedProblem(null)
+
+    fetch(`${API_URL}/users/${participantId}/completions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ problemId })
+    }).catch((err) => console.error('Error syncing completed problem:', err))
   }
 
   const handleMouseDown = (handle) => {

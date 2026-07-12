@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { BrowserRouter } from 'react-router-dom'
 import AdminLogin from './components/AdminLogin'
 import Dashboard from './components/Dashboard'
 import './App.css'
@@ -27,7 +28,11 @@ function App() {
     return <AdminLogin onLogin={handleAdminLogin} />
   }
 
-  return <Dashboard onLogout={handleAdminLogout} />
+  return (
+    <BrowserRouter basename="/admin">
+      <Dashboard onLogout={handleAdminLogout} />
+    </BrowserRouter>
+  )
 }
 
 export default App

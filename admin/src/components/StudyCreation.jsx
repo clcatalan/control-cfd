@@ -43,6 +43,7 @@ function StudyCreation() {
   const [saving, setSaving] = useState(false)
   const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
   const [togglingAllProblems, setTogglingAllProblems] = useState(false)
+  const [resetting, setResetting] = useState(false)
 
   const fetchSettings = async () => {
     try {
@@ -76,6 +77,31 @@ function StudyCreation() {
       setError('Failed to update setting')
     } finally {
       setTogglingAllProblems(false)
+    }
+  }
+
+  const handleResetProgress = async () => {
+    const confirmed = confirm(
+      "This will permanently clear EVERY participant's completed-problem history and the entire problem schedule, then unlock all problems for everyone. This cannot be undone. Continue?"
+    )
+    if (!confirmed) return
+
+    setResetting(true)
+    setError('')
+    try {
+      const response = await fetch(`${API_URL}/reset-progress`, { method: 'POST' })
+      const data = await response.json()
+      if (data.success) {
+        setAllProblemsEnabled(data.allProblemsEnabled)
+        fetchSchedule()
+      } else {
+        setError(data.message || 'Failed to reset progress')
+      }
+    } catch (err) {
+      console.error('Error resetting progress:', err)
+      setError('Failed to reset progress')
+    } finally {
+      setResetting(false)
     }
   }
 
@@ -181,13 +207,22 @@ function StudyCreation() {
     <div className="dashboard-content">
       <div className="content-header">
         <h2>Study Creation</h2>
-        <button
-          className={`testing-toggle-btn ${allProblemsEnabled ? 'active' : ''}`}
-          onClick={handleToggleAllProblems}
-          disabled={togglingAllProblems}
-        >
-          {allProblemsEnabled ? 'Disable All Problems' : 'Enable All Problems'}
-        </button>
+        <div className="header-actions">
+          <button
+            className={`testing-toggle-btn ${allProblemsEnabled ? 'active' : ''}`}
+            onClick={handleToggleAllProblems}
+            disabled={togglingAllProblems}
+          >
+            {allProblemsEnabled ? 'Disable All Problems' : 'Enable All Problems'}
+          </button>
+          <button
+            className="reset-progress-btn"
+            onClick={handleResetProgress}
+            disabled={resetting}
+          >
+            {resetting ? 'Resetting...' : 'Reset All Progress'}
+          </button>
+        </div>
       </div>
 
       {allProblemsEnabled && (

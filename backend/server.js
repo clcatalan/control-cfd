@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
 const db = require('./database');
+const problems = require('./problems');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -236,6 +237,60 @@ app.delete('/api/users/:participantId', async (req, res) => {
   }
 });
 
+// Record that a participant completed a problem (called by the study frontend)
+app.post('/api/users/:participantId/completions', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const { problemId } = req.body;
+
+    if (!problemId) {
+      return res.status(400).json({ success: false, message: 'problemId is required' });
+    }
+
+    await db.markProblemCompleted(participantId, problemId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error recording completion:', error);
+
+    if (error.message === 'User not found') {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error recording completion'
+    });
+  }
+});
+
+// Get a participant's per-problem progress (admin use)
+app.get('/api/users/:participantId/progress', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const completions = await db.getUserCompletions(participantId);
+
+    if (completions === null) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const completedAtByProblemId = new Map(completions.map((c) => [c.problem_id, c.completed_at]));
+    const progress = problems.map((problem) => ({
+      id: problem.id,
+      title: problem.title,
+      completed: completedAtByProblemId.has(problem.id),
+      completedAt: completedAtByProblemId.get(problem.id) || null
+    }));
+
+    res.json({ success: true, participantId, progress });
+  } catch (error) {
+    console.error('Error fetching progress:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching progress'
+    });
+  }
+});
+
 // Get the full problem availability schedule
 app.get('/api/schedule', async (req, res) => {
   try {
@@ -334,6 +389,21 @@ app.post('/api/settings/all-problems-enabled', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error updating settings'
+    });
+  }
+});
+
+// Reset the entire study: clear every participant's completion history and the
+// problem schedule, then unlock all problems (admin use, global, irreversible)
+app.post('/api/reset-progress', async (req, res) => {
+  try {
+    const settings = await db.resetAllProgress();
+    res.json({ success: true, allProblemsEnabled: settings.all_problems_enabled });
+  } catch (error) {
+    console.error('Error resetting progress:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error resetting progress'
     });
   }
 });

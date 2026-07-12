@@ -13,7 +13,7 @@ function formatDate(dateString) {
   })
 }
 
-function UsersTable({ users, onDelete }) {
+function UsersTable({ users, onDelete, onSelectUser }) {
   if (users.length === 0) {
     return (
       <div className="users-empty">
@@ -35,11 +35,15 @@ function UsersTable({ users, onDelete }) {
         </thead>
         <tbody>
           {users.map((user) => (
-            <tr key={user.id}>
+            <tr
+              key={user.id}
+              className="user-row"
+              onClick={() => onSelectUser(user)}
+            >
               <td>{user.id}</td>
               <td className="participant-id">{user.participant_id}</td>
               <td>{formatDate(user.created_at)}</td>
-              <td className="actions-col">
+              <td className="actions-col" onClick={(e) => e.stopPropagation()}>
                 <button
                   className="delete-btn"
                   onClick={() => onDelete(user.participant_id)}

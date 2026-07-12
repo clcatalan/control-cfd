@@ -57,6 +57,17 @@ async function initializeDatabase() {
   `);
   console.log('Problem schedule table ready');
 
+  // Records which problems a participant has completed, reported by the study frontend as they solve each one
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS problem_completions (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      problem_id INTEGER NOT NULL,
+      completed_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (user_id, problem_id)
+    )
+  `);
+  console.log('Problem completions table ready');
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS study_settings (
       id INTEGER PRIMARY KEY DEFAULT 1,
@@ -146,6 +157,34 @@ const dbOperations = {
     return isValid ? admin : null;
   },
 
+  // Record that a participant completed a problem (idempotent)
+  markProblemCompleted: async (participantId, problemId) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    await pool.query(
+      `INSERT INTO problem_completions (user_id, problem_id)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id, problem_id) DO NOTHING`,
+      [user.id, problemId]
+    );
+    return { userId: user.id, problemId };
+  },
+
+  // Get a participant's completed problem IDs, or null if the participant doesn't exist
+  getUserCompletions: async (participantId) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      return null;
+    }
+    const { rows } = await pool.query(
+      'SELECT problem_id, completed_at FROM problem_completions WHERE user_id = $1',
+      [user.id]
+    );
+    return rows;
+  },
+
   // Get the full problem availability schedule
   getSchedule: async () => {
     const { rows } = await pool.query(
@@ -192,6 +231,27 @@ const dbOperations = {
       [enabled]
     );
     return rows[0];
+  },
+
+  // Clear every participant's completion history and the problem schedule, then
+  // unlock all problems. Admin "Reset All Progress" action — global, irreversible.
+  resetAllProgress: async () => {
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('DELETE FROM problem_completions');
+      await client.query('DELETE FROM problem_schedule');
+      const { rows } = await client.query(
+        'UPDATE study_settings SET all_problems_enabled = true WHERE id = 1 RETURNING all_problems_enabled'
+      );
+      await client.query('COMMIT');
+      return rows[0];
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
+    }
   }
 };
 
