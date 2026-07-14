@@ -4,6 +4,7 @@ import EditorPanel from './components/EditorPanel'
 import ExplanationPanel from './components/ExplanationPanel'
 import Login from './components/Login'
 import ProblemList from './components/ProblemList'
+import { useAiNarration } from './hooks/useAiNarration'
 import './App.css'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
@@ -20,6 +21,13 @@ function App() {
   const [middleWidth, setMiddleWidth] = useState(40)
   const [activeHandle, setActiveHandle] = useState(null)
   const [completedProblemIds, setCompletedProblemIds] = useState([])
+
+  const narration = useAiNarration({
+    problem: selectedProblem,
+    language,
+    isGenerating,
+    visible: aiSolutionGenerated,
+  })
 
   // The backend is the source of truth for which problems a participant has completed
   const fetchCompletedProblemIds = async (id) => {
@@ -192,6 +200,7 @@ function App() {
             onLanguageChange={handleLanguageChange}
             onGenerateStart={handleGenerateStart}
             onGenerateComplete={handleGenerateComplete}
+            activeLineRanges={narration.currentLineRanges}
           />
         </div>
         <div
@@ -205,6 +214,11 @@ function App() {
             visible={aiSolutionGenerated}
             isGenerating={isGenerating}
             onResolved={handleSolutionResolved}
+            currentBlockIndex={narration.currentBlockIndex}
+            isSpeaking={narration.isSpeaking}
+            isMuted={narration.isMuted}
+            onToggleMute={narration.toggleMute}
+            onStopNarration={narration.stop}
           />
         </div>
       </div>

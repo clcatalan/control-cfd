@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Editor from '@monaco-editor/react'
 import './EditorPanel.css'
 
@@ -9,9 +9,35 @@ const defaultCode = {
   cpp: ``
 }
 
-function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onGenerateComplete }) {
+function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onGenerateComplete, activeLineRanges }) {
   const [code, setCode] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
+  const editorRef = useRef(null)
+  const monacoRef = useRef(null)
+  const decorationIdsRef = useRef([])
+
+  const handleEditorMount = (editor, monacoInstance) => {
+    editorRef.current = editor
+    monacoRef.current = monacoInstance
+  }
+
+  useEffect(() => {
+    const editor = editorRef.current
+    const monacoInstance = monacoRef.current
+    if (!editor || !monacoInstance) return
+
+    if (!activeLineRanges || activeLineRanges.length === 0) {
+      decorationIdsRef.current = editor.deltaDecorations(decorationIdsRef.current, [])
+      return
+    }
+
+    const decorations = activeLineRanges.map((range) => ({
+      range: new monacoInstance.Range(range.start, 1, range.end, 1),
+      options: { isWholeLine: true, className: 'narration-highlight-line' },
+    }))
+    decorationIdsRef.current = editor.deltaDecorations(decorationIdsRef.current, decorations)
+    editor.revealLineInCenterIfOutsideViewport(activeLineRanges[0].start)
+  }, [activeLineRanges])
 
   const handleLanguageChange = (e) => {
     const newLang = e.target.value
@@ -71,6 +97,7 @@ function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onG
           language={language}
           value={code}
           onChange={handleEditorChange}
+          onMount={handleEditorMount}
           theme="vs-dark"
           options={{
             readOnly: true,

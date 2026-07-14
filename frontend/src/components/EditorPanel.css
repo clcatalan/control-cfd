@@ -164,3 +164,8 @@
   color: #666;
   font-style: italic;
 }
+
+.narration-highlight-line {
+  background-color: rgba(10, 132, 255, 0.15);
+  border-left: 3px solid #0a84ff;
+}

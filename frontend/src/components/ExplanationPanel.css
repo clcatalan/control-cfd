@@ -9,6 +9,9 @@
   background-color: #262626;
   border-bottom: 1px solid #3c3c3c;
   padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .explanation-header h2 {
@@ -16,6 +19,31 @@
   font-weight: 600;
   color: #fff;
   margin: 0;
+}
+
+.narration-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.narration-btn {
+  background-color: #1e1e1e;
+  border: 1px solid #3c3c3c;
+  color: #fff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.2s;
+}
+
+.narration-btn:hover {
+  border-color: #0a84ff;
+}
+
+.narration-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .explanation-content {
@@ -105,12 +133,40 @@
   color: rgba(122, 184, 255, 0.6);
 }
 
+.explanation-line-block.is-speaking,
+p.explanation-text.is-speaking {
+  background-color: rgba(10, 132, 255, 0.08);
+  border-radius: 4px;
+  box-shadow: inset 3px 0 0 #0a84ff;
+  padding: 8px 12px;
+  margin-left: -12px;
+  margin-right: -12px;
+  transition: background-color 0.2s ease;
+}
+
 .explanation-loading {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
   min-height: 200px;
+}
+
+.explanation-speaking-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+  min-height: 200px;
+}
+
+.speaking-label {
+  color: #d1d1d1;
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
 }
 
 .spinner {

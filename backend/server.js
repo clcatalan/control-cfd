@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const db = require('./database');
 const problems = require('./problems');
+const tts = require('./tts');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -21,6 +22,23 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
+});
+
+// Text-to-speech for AI explanation narration
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text, voice } = req.body;
+    if (!text || typeof text !== 'string' || !text.trim()) {
+      return res.status(400).json({ success: false, message: 'text is required' });
+    }
+    const audioBuffer = await tts.synthesize(text.trim(), voice || 'alloy');
+    res.set('Content-Type', 'audio/mpeg');
+    res.set('Cache-Control', 'public, max-age=86400');
+    res.send(audioBuffer);
+  } catch (err) {
+    console.error('TTS error:', err.message);
+    res.status(503).json({ success: false, message: 'Text-to-speech unavailable' });
+  }
 });
 
 // Login endpoint (validates existing users only)

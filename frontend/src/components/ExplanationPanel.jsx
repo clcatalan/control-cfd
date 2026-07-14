@@ -1,41 +1,43 @@
 import React, { useState } from 'react'
 import ConfirmDialog from './ConfirmDialog'
+import { languageFields, parseDetailedExplanation } from '../utils/explanationParsing'
 import './ExplanationPanel.css'
 
-const languageFields = {
-  javascript: { hle: 'hleJS', dle: 'dleJS' },
-  python: { hle: 'hlePython', dle: 'dlePython' },
-  java: { hle: 'hleJava', dle: 'dleJava' },
-  cpp: { hle: 'hleCpp', dle: 'dleCPP' },
-}
-
-const LINE_LABEL_PATTERN = /^(lines?\s+[\d,\s-]+)\n([\s\S]*)$/i
-
-function renderDetailedExplanation(text) {
+function renderDetailedExplanation(text, currentBlockIndex) {
   if (!text) {
     return <p className="explanation-text">No detailed explanation available yet.</p>
   }
 
-  return text.split('\n\n').map((paragraph, index) => {
-    const match = paragraph.match(LINE_LABEL_PATTERN)
-    if (!match) {
+  return parseDetailedExplanation(text).map((block) => {
+    const isSpeaking = currentBlockIndex === block.index + 1
+    if (block.type === 'plain') {
       return (
-        <p className="explanation-text" key={index}>
-          {paragraph}
+        <p className={`explanation-text${isSpeaking ? ' is-speaking' : ''}`} key={block.index}>
+          {block.text}
         </p>
       )
     }
-    const [, label, sentence] = match
     return (
-      <div className="explanation-line-block" key={index}>
-        <span className="line-breadcrumb">{label}</span>
-        <p className="explanation-text">{sentence}</p>
+      <div className={`explanation-line-block${isSpeaking ? ' is-speaking' : ''}`} key={block.index}>
+        <span className="line-breadcrumb">{block.label}</span>
+        <p className="explanation-text">{block.sentence}</p>
       </div>
     )
   })
 }
 
-function ExplanationPanel({ problem, language, visible, isGenerating, onResolved }) {
+function ExplanationPanel({
+  problem,
+  language,
+  visible,
+  isGenerating,
+  onResolved,
+  currentBlockIndex,
+  isSpeaking,
+  isMuted,
+  onToggleMute,
+  onStopNarration,
+}) {
   const [pendingAction, setPendingAction] = useState(null)
 
   const confirmAccept = () => {
@@ -58,6 +60,21 @@ function ExplanationPanel({ problem, language, visible, isGenerating, onResolved
     <div className="explanation-panel">
       <div className="explanation-header">
         <h2>AI Explanation</h2>
+        {visible && (
+          <div className="narration-controls">
+            <button className="narration-btn" onClick={onToggleMute} title={isMuted ? 'Unmute' : 'Mute'}>
+              {isMuted ? '🔇' : '🔊'}
+            </button>
+            <button
+              className="narration-btn"
+              onClick={onStopNarration}
+              disabled={!isSpeaking}
+              title="Stop narration"
+            >
+              Stop
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="explanation-content">
@@ -66,7 +83,13 @@ function ExplanationPanel({ problem, language, visible, isGenerating, onResolved
             <div className="spinner" />
           </div>
         )}
-        {visible && (
+        {visible && isSpeaking && (
+          <div className="explanation-speaking-overlay">
+            <div className="spinner" />
+            <p className="speaking-label">AI is explaining its solution</p>
+          </div>
+        )}
+        {visible && !isSpeaking && (
           <>
             <div className="explanation-section">
               <h4>High-Level Explanation</h4>
@@ -77,7 +100,7 @@ function ExplanationPanel({ problem, language, visible, isGenerating, onResolved
 
             <div className="explanation-section">
               <h4>Detailed Explanation</h4>
-              {renderDetailedExplanation(detailedExplanation)}
+              {renderDetailedExplanation(detailedExplanation, currentBlockIndex)}
             </div>
           </>
         )}
