@@ -12,6 +12,7 @@ const PORT = process.env.PORT || 3001;
 const FRONTEND_DIST = path.join(__dirname, '../frontend/dist');
 const ADMIN_DIST = path.join(__dirname, '../admin/dist');
 
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -67,7 +68,8 @@ app.post('/api/auth/login', async (req, res) => {
         user: {
           id: existingUser.id,
           participantId: existingUser.participant_id,
-          createdAt: existingUser.created_at
+          createdAt: existingUser.created_at,
+          studyGroup: existingUser.study_group
         },
         isNewUser: false
       });
@@ -210,7 +212,8 @@ app.get('/api/auth/validate/:participantId', async (req, res) => {
         user: {
           id: user.id,
           participantId: user.participant_id,
-          createdAt: user.created_at
+          createdAt: user.created_at,
+          studyGroup: user.study_group
         }
       });
     } else {
@@ -255,17 +258,45 @@ app.delete('/api/users/:participantId', async (req, res) => {
   }
 });
 
+// Assign a participant to a study group, "control" or "experimental" (admin use)
+app.post('/api/users/:participantId/group', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const { group } = req.body;
+
+    if (group !== 'control' && group !== 'experimental' && group !== null) {
+      return res.status(400).json({
+        success: false,
+        message: 'group must be "control", "experimental", or null'
+      });
+    }
+
+    const user = await db.setUserGroup(participantId, group);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error('Error setting user group:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error setting user group'
+    });
+  }
+});
+
 // Record that a participant completed a problem (called by the study frontend)
 app.post('/api/users/:participantId/completions', async (req, res) => {
   try {
     const { participantId } = req.params;
-    const { problemId } = req.body;
+    const { problemId, response } = req.body;
 
     if (!problemId) {
       return res.status(400).json({ success: false, message: 'problemId is required' });
     }
 
-    await db.markProblemCompleted(participantId, problemId);
+    await db.markProblemCompleted(participantId, problemId, response);
     res.json({ success: true });
   } catch (error) {
     console.error('Error recording completion:', error);
@@ -291,13 +322,17 @@ app.get('/api/users/:participantId/progress', async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const completedAtByProblemId = new Map(completions.map((c) => [c.problem_id, c.completed_at]));
-    const progress = problems.map((problem) => ({
-      id: problem.id,
-      title: problem.title,
-      completed: completedAtByProblemId.has(problem.id),
-      completedAt: completedAtByProblemId.get(problem.id) || null
-    }));
+    const completionByProblemId = new Map(completions.map((c) => [c.problem_id, c]));
+    const progress = problems.map((problem) => {
+      const completion = completionByProblemId.get(problem.id);
+      return {
+        id: problem.id,
+        title: problem.title,
+        completed: Boolean(completion),
+        completedAt: completion?.completed_at || null,
+        response: completion?.response || null
+      };
+    });
 
     res.json({ success: true, participantId, progress });
   } catch (error) {

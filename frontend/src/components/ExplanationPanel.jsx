@@ -32,24 +32,24 @@ function ExplanationPanel({
   visible,
   isGenerating,
   onResolved,
+  narrationEnabled,
   currentBlockIndex,
   isSpeaking,
-  isMuted,
-  onToggleMute,
-  onStopNarration,
+  isReplaying,
+  onReplay,
 }) {
   const [pendingAction, setPendingAction] = useState(null)
 
   const confirmAccept = () => {
     console.log('Solution accepted')
     setPendingAction(null)
-    onResolved?.(problem?.id)
+    onResolved?.(problem?.id, 'accept')
   }
 
   const confirmReject = () => {
     console.log('Solution rejected')
     setPendingAction(null)
-    onResolved?.(problem?.id)
+    onResolved?.(problem?.id, 'reject')
   }
 
   const fields = languageFields[language] || languageFields.javascript
@@ -60,18 +60,15 @@ function ExplanationPanel({
     <div className="explanation-panel">
       <div className="explanation-header">
         <h2>AI Explanation</h2>
-        {visible && (
+        {visible && narrationEnabled && (
           <div className="narration-controls">
-            <button className="narration-btn" onClick={onToggleMute} title={isMuted ? 'Unmute' : 'Mute'}>
-              {isMuted ? '🔇' : '🔊'}
-            </button>
             <button
               className="narration-btn"
-              onClick={onStopNarration}
-              disabled={!isSpeaking}
-              title="Stop narration"
+              onClick={onReplay}
+              disabled={isSpeaking}
+              title="Play AI Explanation Again"
             >
-              Stop
+              Play AI Explanation Again
             </button>
           </div>
         )}
@@ -83,13 +80,13 @@ function ExplanationPanel({
             <div className="spinner" />
           </div>
         )}
-        {visible && isSpeaking && (
+        {visible && isSpeaking && !isReplaying && (
           <div className="explanation-speaking-overlay">
             <div className="spinner" />
             <p className="speaking-label">AI is explaining its solution</p>
           </div>
         )}
-        {visible && !isSpeaking && (
+        {visible && (!isSpeaking || isReplaying) && (
           <>
             <div className="explanation-section">
               <h4>High-Level Explanation</h4>
@@ -107,10 +104,10 @@ function ExplanationPanel({
       </div>
 
       <div className="explanation-footer">
-        <button className="btn-reject" onClick={() => setPendingAction('reject')} disabled={!visible}>
+        <button className="btn-reject" onClick={() => setPendingAction('reject')} disabled={!visible || isSpeaking}>
           Reject
         </button>
-        <button className="btn-accept" onClick={() => setPendingAction('accept')} disabled={!visible}>
+        <button className="btn-accept" onClick={() => setPendingAction('accept')} disabled={!visible || isSpeaking}>
           Accept
         </button>
       </div>

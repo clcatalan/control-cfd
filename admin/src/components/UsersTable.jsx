@@ -30,6 +30,7 @@ function UsersTable({ users, onDelete, onSelectUser }) {
             <th>#</th>
             <th>Participant ID</th>
             <th>Registered</th>
+            <th>Group</th>
             <th className="actions-col">Actions</th>
           </tr>
         </thead>
@@ -43,6 +44,15 @@ function UsersTable({ users, onDelete, onSelectUser }) {
               <td>{user.id}</td>
               <td className="participant-id">{user.participant_id}</td>
               <td>{formatDate(user.created_at)}</td>
+              <td>
+                {user.study_group ? (
+                  <span className={`group-badge ${user.study_group}`}>
+                    {user.study_group === 'control' ? 'Control' : 'Experimental'}
+                  </span>
+                ) : (
+                  <span className="group-badge-empty">Unassigned</span>
+                )}
+              </td>
               <td className="actions-col" onClick={(e) => e.stopPropagation()}>
                 <button
                   className="delete-btn"

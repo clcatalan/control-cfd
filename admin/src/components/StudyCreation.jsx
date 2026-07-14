@@ -44,6 +44,9 @@ function StudyCreation() {
   const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
   const [togglingAllProblems, setTogglingAllProblems] = useState(false)
   const [resetting, setResetting] = useState(false)
+  const [users, setUsers] = useState([])
+  const [loadingUsers, setLoadingUsers] = useState(true)
+  const [savingGroupFor, setSavingGroupFor] = useState(null)
 
   const fetchSettings = async () => {
     try {
@@ -124,9 +127,55 @@ function StudyCreation() {
     }
   }
 
+  const fetchUsers = async () => {
+    setLoadingUsers(true)
+    try {
+      const response = await fetch(`${API_URL}/users`)
+      const data = await response.json()
+      if (data.success) {
+        setUsers(data.users)
+      } else {
+        setError('Failed to fetch participants')
+      }
+    } catch (err) {
+      console.error('Error fetching participants:', err)
+      setError('Unable to connect to server')
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
+
+  const handleSetGroup = async (participantId, group) => {
+    setSavingGroupFor(participantId)
+    setError('')
+    try {
+      const response = await fetch(`${API_URL}/users/${participantId}/group`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group })
+      })
+      const data = await response.json()
+      if (data.success) {
+        setUsers((prev) =>
+          prev.map((user) =>
+            user.participant_id === participantId ? { ...user, study_group: group } : user
+          )
+        )
+      } else {
+        setError(data.message || 'Failed to update group')
+      }
+    } catch (err) {
+      console.error('Error setting group:', err)
+      setError('Failed to update group')
+    } finally {
+      setSavingGroupFor(null)
+    }
+  }
+
   useEffect(() => {
     fetchSchedule()
     fetchSettings()
+    fetchUsers()
   }, [])
 
   const scheduleByDate = useMemo(() => {
@@ -207,6 +256,18 @@ function StudyCreation() {
     <div className="dashboard-content">
       <div className="content-header">
         <h2>Study Creation</h2>
+      </div>
+
+      {allProblemsEnabled && (
+        <div className="testing-mode-banner">
+          Testing mode is ON — all problems are unlocked for every participant, regardless of schedule.
+        </div>
+      )}
+
+      {error && <div className="error-banner">{error}</div>}
+
+      <div className="section-header">
+        <h3 className="section-label">Problem Configuration</h3>
         <div className="header-actions">
           <button
             className={`testing-toggle-btn ${allProblemsEnabled ? 'active' : ''}`}
@@ -224,14 +285,6 @@ function StudyCreation() {
           </button>
         </div>
       </div>
-
-      {allProblemsEnabled && (
-        <div className="testing-mode-banner">
-          Testing mode is ON — all problems are unlocked for every participant, regardless of schedule.
-        </div>
-      )}
-
-      {error && <div className="error-banner">{error}</div>}
 
       <div className="study-creation-layout">
         <div className="calendar-card">
@@ -341,6 +394,52 @@ function StudyCreation() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="section-header">
+        <h3 className="section-label">Participant Configuration</h3>
+      </div>
+
+      <div className="participants-card">
+        {loadingUsers ? (
+          <div className="loading">Loading participants...</div>
+        ) : users.length === 0 ? (
+          <p className="schedule-panel-hint">No participants registered yet.</p>
+        ) : (
+          <table className="participants-table">
+            <thead>
+              <tr>
+                <th>Participant ID</th>
+                <th>Group</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.participant_id}</td>
+                  <td>
+                    <div className="group-toggle">
+                      <button
+                        className={`group-btn control ${user.study_group === 'control' ? 'active' : ''}`}
+                        disabled={savingGroupFor === user.participant_id}
+                        onClick={() => handleSetGroup(user.participant_id, 'control')}
+                      >
+                        Control
+                      </button>
+                      <button
+                        className={`group-btn experimental ${user.study_group === 'experimental' ? 'active' : ''}`}
+                        disabled={savingGroupFor === user.participant_id}
+                        onClick={() => handleSetGroup(user.participant_id, 'experimental')}
+                      >
+                        Experimental
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   )

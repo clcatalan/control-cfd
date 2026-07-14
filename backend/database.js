@@ -35,6 +35,9 @@ async function initializeDatabase() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `);
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS study_group TEXT
+  `);
   console.log('Users table ready');
 
   await pool.query(`
@@ -63,8 +66,12 @@ async function initializeDatabase() {
       user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       problem_id INTEGER NOT NULL,
       completed_at TIMESTAMPTZ DEFAULT NOW(),
+      response TEXT,
       PRIMARY KEY (user_id, problem_id)
     )
+  `);
+  await pool.query(`
+    ALTER TABLE problem_completions ADD COLUMN IF NOT EXISTS response TEXT
   `);
   console.log('Problem completions table ready');
 
@@ -141,6 +148,15 @@ const dbOperations = {
     return { deleted: result.rowCount };
   },
 
+  // Assign (or clear, with group=null) a participant's study group
+  setUserGroup: async (participantId, group) => {
+    const { rows } = await pool.query(
+      'UPDATE users SET study_group = $1 WHERE participant_id = $2 RETURNING id, participant_id, study_group',
+      [group, participantId]
+    );
+    return rows[0];
+  },
+
   // Find admin by username
   findAdminByUsername: async (username) => {
     const { rows } = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
@@ -157,17 +173,17 @@ const dbOperations = {
     return isValid ? admin : null;
   },
 
-  // Record that a participant completed a problem (idempotent)
-  markProblemCompleted: async (participantId, problemId) => {
+  // Record that a participant completed a problem, along with their accept/reject response (idempotent)
+  markProblemCompleted: async (participantId, problemId, response) => {
     const user = await dbOperations.findUserByParticipantId(participantId);
     if (!user) {
       throw new Error('User not found');
     }
     await pool.query(
-      `INSERT INTO problem_completions (user_id, problem_id)
-       VALUES ($1, $2)
-       ON CONFLICT (user_id, problem_id) DO NOTHING`,
-      [user.id, problemId]
+      `INSERT INTO problem_completions (user_id, problem_id, response)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id, problem_id) DO UPDATE SET response = EXCLUDED.response`,
+      [user.id, problemId, response || null]
     );
     return { userId: user.id, problemId };
   },
@@ -179,7 +195,7 @@ const dbOperations = {
       return null;
     }
     const { rows } = await pool.query(
-      'SELECT problem_id, completed_at FROM problem_completions WHERE user_id = $1',
+      'SELECT problem_id, completed_at, response FROM problem_completions WHERE user_id = $1',
       [user.id]
     );
     return rows;

@@ -56,6 +56,27 @@
   font-size: 0.9rem;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-header:first-of-type {
+  margin-top: 0;
+}
+
+.section-label {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #5a5f73;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 .study-creation-layout {
   display: grid;
   grid-template-columns: minmax(320px, 480px) 1fr;
@@ -243,4 +264,75 @@
 
 .scheduled-list .delete-btn:hover {
   background: #f5c6c2;
+}
+
+.participants-card {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  padding: 1.5rem;
+}
+
+.participants-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.participants-table th,
+.participants-table td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid #eef0f7;
+  font-size: 0.9rem;
+  color: #2c3e50;
+}
+
+.participants-table th {
+  color: #95a5a6;
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.participants-table tr:last-child td {
+  border-bottom: none;
+}
+
+.group-toggle {
+  display: inline-flex;
+  gap: 0.5rem;
+}
+
+.group-btn {
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #d8dcf0;
+  background: white;
+  color: #5a5f73;
+  transition: all 0.2s ease;
+}
+
+.group-btn:hover {
+  background: #f0f1fc;
+}
+
+.group-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.group-btn.control.active {
+  color: #2f6f4f;
+  background: #e8f6ee;
+  border-color: #a9dcc0;
+}
+
+.group-btn.experimental.active {
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: transparent;
 }

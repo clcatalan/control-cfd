@@ -22,11 +22,16 @@ function App() {
   const [activeHandle, setActiveHandle] = useState(null)
   const [completedProblemIds, setCompletedProblemIds] = useState([])
 
+  // Voice narration is a study treatment: only participants assigned to the
+  // "experimental" group (via the admin panel) get it. Anyone else (control
+  // group, or not yet assigned) gets the original text-only explanation.
+  const isExperimental = userData?.studyGroup === 'experimental'
+
   const narration = useAiNarration({
     problem: selectedProblem,
     language,
-    isGenerating,
     visible: aiSolutionGenerated,
+    enabled: isExperimental,
   })
 
   // The backend is the source of truth for which problems a participant has completed
@@ -99,14 +104,14 @@ function App() {
     setAiSolutionGenerated(true)
   }
 
-  const handleSolutionResolved = (problemId) => {
+  const handleSolutionResolved = (problemId, response) => {
     setCompletedProblemIds((prev) => (prev.includes(problemId) ? prev : [...prev, problemId]))
     setSelectedProblem(null)
 
     fetch(`${API_URL}/users/${participantId}/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ problemId })
+      body: JSON.stringify({ problemId, response })
     }).catch((err) => console.error('Error syncing completed problem:', err))
   }
 
@@ -214,11 +219,11 @@ function App() {
             visible={aiSolutionGenerated}
             isGenerating={isGenerating}
             onResolved={handleSolutionResolved}
+            narrationEnabled={isExperimental}
             currentBlockIndex={narration.currentBlockIndex}
             isSpeaking={narration.isSpeaking}
-            isMuted={narration.isMuted}
-            onToggleMute={narration.toggleMute}
-            onStopNarration={narration.stop}
+            isReplaying={narration.isReplaying}
+            onReplay={narration.replay}
           />
         </div>
       </div>

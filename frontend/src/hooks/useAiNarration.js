@@ -3,11 +3,11 @@ import { buildNarrationSegments } from '../utils/narrationSegments'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 
-export function useAiNarration({ problem, language, isGenerating, visible, voice = 'alloy' }) {
+export function useAiNarration({ problem, language, visible, voice = 'alloy', enabled = true }) {
   const [currentLineRanges, setCurrentLineRanges] = useState([])
   const [currentBlockIndex, setCurrentBlockIndex] = useState(null)
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
+  const [isReplaying, setIsReplaying] = useState(false)
 
   const audioRef = useRef(null)
   const segmentsRef = useRef([])
@@ -15,19 +15,12 @@ export function useAiNarration({ problem, language, isGenerating, visible, voice
   const currentIndexRef = useRef(-1)
   const stoppedRef = useRef(true)
   const sessionRef = useRef(0)
-  const isMutedRef = useRef(false)
   const playSegmentAtRef = useRef(() => {})
-
-  useEffect(() => {
-    isMutedRef.current = isMuted
-    if (audioRef.current) audioRef.current.muted = isMuted
-  }, [isMuted])
 
   // Create the single reusable Audio element once.
   useEffect(() => {
     const audio = new Audio()
     audioRef.current = audio
-    audio.muted = isMutedRef.current
 
     audio.onended = () => {
       playSegmentAtRef.current(currentIndexRef.current + 1)
@@ -104,7 +97,6 @@ export function useAiNarration({ problem, language, isGenerating, visible, voice
       }
 
       audio.src = url
-      audio.muted = isMutedRef.current
       audio.play().catch((err) => {
         console.warn('Narration playback failed', err)
         if (!stoppedRef.current && session === sessionRef.current) {
@@ -119,47 +111,31 @@ export function useAiNarration({ problem, language, isGenerating, visible, voice
     playSegmentAtRef.current = playSegmentAt
   }, [playSegmentAt])
 
-  const stop = useCallback(() => {
-    stoppedRef.current = true
-    currentIndexRef.current = -1
-    if (audioRef.current) {
-      audioRef.current.pause()
-    }
-    setIsSpeaking(false)
-    setCurrentBlockIndex(null)
-    setCurrentLineRanges([])
-  }, [])
-
-  const toggleMute = useCallback(() => {
-    setIsMuted((m) => !m)
-  }, [])
-
-  // Prefetch every segment's audio as soon as generation starts, so
-  // playback has zero perceptible latency once the panel becomes visible.
-  useEffect(() => {
-    if (!isGenerating) return
-    const segments = buildNarrationSegments(problem, language)
-    segmentsRef.current = segments
-    segments.forEach((segment) => fetchSegmentAudio(problem?.id, language, segment))
-  }, [isGenerating, problem, language, fetchSegmentAudio])
-
-  // Start playback once the explanation becomes visible. isSpeaking is set
-  // true immediately (not on the audio's 'play' event) so the UI hides the
-  // explanation text for the whole narration session, not just once actual
-  // audio playback begins after the fetch/decode latency of the first segment.
-  useEffect(() => {
-    if (!visible) return
+  // Replays narration on demand (via the "Play AI Explanation Again" button).
+  // Unlike the initial auto-play, this does not hide the explanation text —
+  // isReplaying lets ExplanationPanel tell the two cases apart.
+  const replay = useCallback(() => {
+    if (!enabled) return
     stoppedRef.current = false
+    setIsReplaying(true)
     const segments = buildNarrationSegments(problem, language)
     segmentsRef.current = segments
     if (segments.length > 0) {
       setIsSpeaking(true)
     }
     playSegmentAt(0)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible])
+  }, [enabled, problem, language, playSegmentAt])
 
-  // Reset narration whenever the problem or language changes.
+  // Reset narration whenever the problem or language changes. Must run
+  // (and be declared, so React fires it first) before the prefetch effect
+  // below — both share the [problem, language] dependency, and effects for
+  // a component fire in declaration order within the same commit. Prefetch
+  // used to be declared first, so on every problem/language change it would
+  // fill blobCacheRef with in-flight fetches and this effect would then
+  // immediately blow the ref away with a new empty Map, silently discarding
+  // that prefetch. Playback would then always start a brand-new fetch when
+  // the panel became visible instead of reusing the prefetched audio —
+  // which is what actually caused narration to never play right away.
   useEffect(() => {
     sessionRef.current += 1
     stoppedRef.current = true
@@ -171,9 +147,38 @@ export function useAiNarration({ problem, language, isGenerating, visible, voice
     blobCacheRef.current = new Map()
     segmentsRef.current = []
     setIsSpeaking(false)
+    setIsReplaying(false)
     setCurrentBlockIndex(null)
     setCurrentLineRanges([])
   }, [problem?.id, language])
 
-  return { currentLineRanges, currentBlockIndex, isSpeaking, isMuted, toggleMute, stop }
+  // Prefetch every segment's audio as soon as a problem/language is loaded
+  // (well before "Run" is even clicked), so the TTS round-trip has the
+  // entire time the participant spends reading/coding to complete instead
+  // of just the few seconds of the fake "generating" delay.
+  useEffect(() => {
+    if (!enabled || !problem) return
+    const segments = buildNarrationSegments(problem, language)
+    segmentsRef.current = segments
+    segments.forEach((segment) => fetchSegmentAudio(problem?.id, language, segment))
+  }, [enabled, problem, language, fetchSegmentAudio])
+
+  // Start playback once the explanation becomes visible. isSpeaking is set
+  // true immediately (not on the audio's 'play' event) so the UI hides the
+  // explanation text for the whole narration session, not just once actual
+  // audio playback begins after the fetch/decode latency of the first segment.
+  useEffect(() => {
+    if (!enabled || !visible) return
+    stoppedRef.current = false
+    setIsReplaying(false)
+    const segments = buildNarrationSegments(problem, language)
+    segmentsRef.current = segments
+    if (segments.length > 0) {
+      setIsSpeaking(true)
+    }
+    playSegmentAt(0)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible, enabled])
+
+  return { currentLineRanges, currentBlockIndex, isSpeaking, isReplaying, replay }
 }
