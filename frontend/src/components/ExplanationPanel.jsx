@@ -89,15 +89,14 @@ function ExplanationPanel({
         {visible && (!isSpeaking || isReplaying) && (
           <>
             <div className="explanation-section">
-              <h4>High-Level Explanation</h4>
-              <p className="explanation-text">
+              <h4>Explanation</h4>
+              {renderDetailedExplanation(detailedExplanation, currentBlockIndex)}
+            </div>
+            <div className="explanation-section">
+              <h4>Summary</h4>
+              <p className={`explanation-text${currentBlockIndex === 0 ? ' is-speaking' : ''}`}>
                 {highLevelExplanation || 'No high-level explanation available yet.'}
               </p>
-            </div>
-
-            <div className="explanation-section">
-              <h4>Detailed Explanation</h4>
-              {renderDetailedExplanation(detailedExplanation, currentBlockIndex)}
             </div>
           </>
         )}

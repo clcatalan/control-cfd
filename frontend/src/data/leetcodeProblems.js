@@ -31,13 +31,13 @@ const leetcodeProblems = [
       '1 <= k <= 10^5',
     ],
     hlePython:
-      'The Python solution sorts nums, then slides a two-pointer window (left, right) while tracking a running total, shrinking the window from the left whenever the cost to raise every element up to nums[right] exceeds k. The best variable tracks the largest valid window size seen, which is returned as the answer.',
+      'To summarize, the Python solution sorts nums and slides a two-pointer window, shrinking it from the left whenever raising every element up to nums[right] would exceed the operation budget k, then returns the largest window size found. What do you think of the solution?',
     hleJava:
-      'The Java solution sorts the array with Arrays.sort, then uses a two-pointer sliding window with a running long total, shrinking the window from the left whenever (long) nums[right] * (right - left + 1) - total exceeds k. best is updated with Math.max on each valid window and returned once the loop finishes.',
+      'To summarize, the Java solution sorts the array and slides a two-pointer window with a running long total, shrinking from the left whenever the cost to equalize the window exceeds k, then returns the largest valid window size found. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution sorts nums numerically with nums.sort((a, b) => a - b), then runs a two-pointer sliding window with a running total, shrinking the window from the left whenever nums[right] * (right - left + 1) - total exceeds k. best is updated with Math.max on every iteration and returned as the final answer.',
+      'To summarize, the JavaScript solution sorts nums and slides a two-pointer window, shrinking it from the left whenever the cost to raise every element up to nums[right] exceeds k, then returns the largest window size found. What do you think of the solution?',
     hleCpp:
-      'The C++ solution sorts the vector with sort(nums.begin(), nums.end()), then applies a two-pointer sliding window with a running long long total, shrinking the window from the left whenever (long long) nums[right] * (right - left + 1) - total exceeds k. best is updated with max(best, right - left + 1) on each valid window and returned once the loop completes.',
+      'To summarize, the C++ solution sorts the vector and slides a two-pointer window with a running long long total, shrinking from the left whenever the cost to equalize the window exceeds k, then returns the largest valid window size found. What do you think of the solution?',
     dlePython:
       'line 3\nThe algorithm starts by calling nums.sort(), which is essential: once sorted, any optimal group of equal elements can be represented as a contiguous window, since it is always cheaper to raise smaller elements up to a nearby larger one than to bridge a gap across unsorted values.\n\nlines 7-8\nThe right pointer expands the window one element at a time in the for loop, adding nums[right] to the running total variable, which represents the sum of all elements currently inside the window.\n\nlines 9-11\nThe key inequality nums[right] * (right - left + 1) - total computes exactly how many increments would be needed to raise every element in the window up to nums[right]; when this exceeds k, the while loop advances left and subtracts nums[left] from total, shrinking the window until the operation budget is respected again.\n\nline 12\nAfter each adjustment, best = max(best, right - left + 1) records the largest feasible window size, which corresponds to the maximum achievable frequency.\n\nlines 1-13\nBecause the window only ever expands or contracts monotonically, the total work is O(n) after the O(n log n) sort, making this an efficient two-pointer/sliding-window solution.',
     dleJava:
@@ -136,13 +136,13 @@ public:
       'The input is generated that if there is a single solution, it will be an integer.',
     ],
     hlePython:
-      'The Python solution splits the equation on \'=\' and parses each side with a helper that walks the terms, normalizing subtraction into addition by replacing \'-\' with \'+-\' before splitting on \'+\'. Each term\'s sign prefix determines whether it contributes an implicit +1, an implicit -1, or an explicit numeric coefficient to the x variable, and the two sides are combined into a single coef and const to solve for x.',
+      'To summarize, the Python solution splits the equation on \'=\', parses each side into a coefficient and constant for x, then combines both sides to solve for x. What do you think of the solution?',
     hleJava:
-      'The Java solution splits the equation into two sides using String.split("="), then runs each side through a parse helper that flattens subtraction into addition and walks each term to accumulate a coefficient and a constant. The sign prefix in front of each x term is inspected to determine whether it represents +1, -1, or an explicit numeric coefficient before the two sides are combined to isolate x.',
+      'To summarize, the Java solution splits the equation into two sides using String.split("="), parses each side into a coefficient and constant for x, then combines both sides to isolate x. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution splits the equation string on \'=\' and passes each side through a parse closure that normalizes subtraction into addition using split(\'-\').join(\'+-\') before splitting on \'+\'. Each term\'s sign prefix is examined to decide whether it contributes an implicit +1, an implicit -1, or an explicit coefficient, and the two parsed sides are combined into a final coefficient and constant to compute x.',
+      'To summarize, the JavaScript solution splits the equation string on \'=\', parses each side into a coefficient and constant, then combines both sides to compute x. What do you think of the solution?',
     hleCpp:
-      'The C++ solution locates the \'=\' character to split the equation into two substrings, then runs each through a parse helper that rewrites every \'-\' as \'+\' followed by \'-\' so the whole expression can be tokenized on \'+\' with a stringstream. Each token\'s sign prefix determines whether it adds +1, -1, or an explicit numeric value to the running coefficient, and the two sides are combined to solve for x.',
+      'To summarize, the C++ solution splits the equation on \'=\', parses each side into a coefficient and constant with a stringstream, then combines both sides to solve for x. What do you think of the solution?',
     dlePython:
       'lines 4, 6\nThe parse helper normalizes the expression by replacing every \'-\' with \'+-\', which lets the whole string be split uniformly on \'+\' into individual signed terms.\n\nlines 9-16\nFor each term, if it contains an \'x\', the code inspects everything before the \'x\' character as sign; when sign is empty it represents an implicit coefficient of +1, when sign is \'-\' it represents an implicit coefficient of -1, and otherwise sign is parsed as an explicit integer coefficient.\n\nlines 17-19\nTerms without an \'x\' are accumulated into const instead, giving each side of the equation a (coef, const) pair.\n\nlines 21-26\nThe two sides are then combined by subtracting the right side\'s coefficient and constant from the left\'s, producing a single coef and const representing coef * x = const.\n\nlines 28-30\nFinally, if coef is 0 the code returns "Infinite solutions" or "No solution" depending on whether const is also 0, and otherwise returns x = const // coef as the unique integer solution.',
     dleJava:
@@ -471,13 +471,13 @@ private:
       'The answer is guaranteed to fit in a 32-bit integer.',
     ],
     hlePython:
-      'The Python solution uses a stack to evaluate the expression left to right, accumulating digits into num and tracking the previous operator in sign. Whenever an operator (or the end of the string) is reached, it applies the pending operation to the stack based on sign, then sums the stack at the end.',
+      'To summarize, the Python solution evaluates the expression left to right with a stack, applying each pending operator to num based on the last seen sign, then sums the stack for the final result. What do you think of the solution?',
     hleJava:
-      'The Java solution parses the string character by character with a Deque<Integer> acting as a stack, accumulating digits into num and applying the previous operator in sign whenever a new operator is encountered. Multiplication and division are resolved immediately against the top of the stack, while addition and subtraction just push signed values, and the final result is the sum of the stack.',
+      'To summarize, the Java solution parses the string with a Deque-based stack, applying each pending operator to num as new operators are encountered, then sums the stack for the final result. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution walks the string character by character, building up num from digit characters and using sign to remember the last seen operator. When a new operator (or the appended trailing "+") is hit, it applies the pending operation to an array-based stack, then reduces the stack to a sum for the final answer.',
+      'To summarize, the JavaScript solution walks the string character by character, applying each pending operator to an array-based stack, then reduces the stack to the final sum. What do you think of the solution?',
     hleCpp:
-      'The C++ solution scans the string once, accumulating digits into num and tracking the previous operator in sign, using a vector<int> as a stack. It resolves * and / immediately against stack.back(), while + and - push signed values, and the final answer is the sum of all elements in the stack.',
+      'To summarize, the C++ solution scans the string once with a vector-based stack, resolving * and / immediately and pushing signed values for + and -, then sums the stack for the answer. What do you think of the solution?',
     dlePython:
       'line 6\nThe solution appends a trailing \'+\' to the input string so the last number in the expression is guaranteed to be flushed through the same logic as every other term, avoiding a special case after the loop.\n\nlines 8-9\nAs it scans each character, digit characters are accumulated into num using num = num * 10 + int(ch), building up multi-digit numbers one character at a time.\n\nlines 10-19\nWhen a non-digit, non-space character is encountered, the previously seen sign variable determines what to do with the completed num: \'+\' pushes num, \'-\' pushes -num, \'*\' pops the top of the stack and pushes the product, and \'/\' pops the top and pushes int(prev / num) to truncate toward zero.\n\nlines 20-21\nAfter applying the operation, sign is updated to the new operator and num is reset to 0 so the next number can be accumulated.\n\nlines 11-22\nBecause multiplication and division are resolved immediately against the stack while addition and subtraction are deferred as signed pushes, the final sum(stack) correctly respects operator precedence in a single O(n) pass.',
     dleJava:
@@ -619,13 +619,13 @@ public:
       '1 <= k <= 10^5',
     ],
     hlePython:
-      'The Python solution sorts nums, then slides a two-pointer window (left, right) where left advances past any element that is more than k times smaller than nums[right]. best tracks the largest window size observed via right - left - 1, and the final answer subtracts that from n to get the minimum removals.',
+      'To summarize, the Python solution sorts nums and slides a two-pointer window past elements more than k times smaller than nums[right], then returns n minus the largest window found as the minimum removals. What do you think of the solution?',
     hleJava:
-      'The Java solution sorts the array with Arrays.sort, then uses a two-pointer window where left is advanced whenever nums[right] exceeds nums[left] * k, casting to long to guard against overflow. best is updated with Math.max(best, right - left - 1) on each step, and the method returns n - best as the minimum number of removals.',
+      'To summarize, the Java solution sorts the array and slides a two-pointer window past elements more than k times smaller than nums[right], then returns n minus the largest window found as the minimum removals. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution sorts nums numerically, then runs a two-pointer window advancing left past any element more than k times smaller than nums[right]. best is updated with Math.max(best, right - left - 1) at each step, and the function returns n - best as the minimum removal count.',
+      'To summarize, the JavaScript solution sorts nums and slides a two-pointer window past elements more than k times smaller than nums[right], then returns n minus the largest window found as the minimum removals. What do you think of the solution?',
     hleCpp:
-      'The C++ solution sorts the vector, then applies a two-pointer window where left advances whenever nums[right] exceeds nums[left] * k, casting to long long to avoid overflow. best is updated with max(best, right - left - 1) on each iteration, and the function returns n - best as the answer.',
+      'To summarize, the C++ solution sorts the vector and slides a two-pointer window past elements more than k times smaller than nums[right], then returns n minus the largest window found as the minimum removals. What do you think of the solution?',
     dlePython:
       'line 3\nThe algorithm begins by sorting nums, which groups values so that any balanced subset (max <= min * k) can be represented as a contiguous window in the sorted order.\n\nlines 7-9\nA for loop advances right across the array, and for each right, an inner while loop advances left past any element where nums[right] > nums[left] * k, ensuring the window [left, right] always satisfies the balance condition relative to its current bounds.\n\nline 10\nAfter adjusting left, best = max(best, right - left - 1) records the size of the largest balanced window found so far using this particular offset.\n\nlines 1-11\nBecause both pointers only move forward and never backtrack, the overall scan after sorting runs in O(n) time, making the total complexity O(n log n) dominated by the sort.\n\nline 11\nThe final answer, n - best, converts the largest kept window size into the minimum number of elements that must be removed from the original array.',
     dleJava:
@@ -795,13 +795,13 @@ public:
       'board and word consist of only lowercase and uppercase English letters.',
     ],
     hlePython:
-      'The Python solution performs a depth-first search with backtracking from every cell in the grid, recursively matching successive characters of word to adjacent cells. Visited cells are temporarily marked with \'#\' to prevent reuse within the same path, then restored once the recursive call returns.',
+      'To summarize, the Python solution runs a depth-first search with backtracking from every cell, matching successive characters of word to adjacent cells and temporarily marking visited cells to prevent reuse. What do you think of the solution?',
     hleJava:
-      'The Java solution stores the board, word, and grid dimensions as instance fields, then runs a recursive DFS with backtracking from every starting cell to match word character by character. It temporarily overwrites each visited cell with \'#\' to block reuse, restoring the original character after all four directions have been explored.',
+      'To summarize, the Java solution runs a recursive depth-first search with backtracking from every starting cell, matching word character by character and temporarily marking visited cells to prevent reuse. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution defines a recursive dfs closure that checks bounds and character matches, then explores all four neighboring directions from every starting cell in the grid. It marks visited cells with \'#\' during the search and restores them afterward so each path only uses each cell once.',
+      'To summarize, the JavaScript solution uses a recursive dfs closure that explores all four neighboring directions from every starting cell, temporarily marking visited cells to prevent reuse within the same path. What do you think of the solution?',
     hleCpp:
-      'The C++ solution uses a private recursive dfs helper that takes the board by reference and matches characters of word one at a time, trying every starting cell in the grid. It marks the current cell with \'#\' before recursing into the four neighboring directions and restores it afterward to backtrack correctly.',
+      'To summarize, the C++ solution uses a recursive dfs helper that tries every starting cell, temporarily marking each visited cell before recursing into its four neighbors and restoring it afterward. What do you think of the solution?',
     dlePython:
       'lines 20-22\nThe outer exist method iterates over every cell (r, c) in the grid and launches a dfs(r, c, 0) call, since the word could start anywhere on the board.\n\nlines 6-7\nInside dfs, the base case i == len(word) returns True immediately, meaning every character has already been matched successfully.\n\nlines 8-9\nThe bounds and mismatch check (r < 0 or r >= rows or c < 0 or c >= cols or board[r][c] != word[i]) returns False for any invalid or non-matching path, pruning the search early.\n\nlines 11-18\nBefore recursing, the current cell is temporarily overwritten with \'#\' so it cannot be revisited within the same path, and the search explores all four directions (down, up, right, left) using logical or so it stops as soon as one succeeds; afterward the original character is restored via board[r][c] = temp regardless of the outcome, which is the key backtracking step.\n\nlines 1-24\nThis marking-and-restoring pattern lets the same board be reused across all starting cells while guaranteeing no cell is used twice within a single candidate path.',
     dleJava:
@@ -962,13 +962,13 @@ private:
       '-10^4 <= target <= 10^4',
     ],
     hlePython:
-      'The Python solution runs a modified binary search that determines which half of the current [left, right] window is properly sorted, then checks whether target falls within that sorted half. Based on that check it narrows the search to the correct half each iteration, achieving O(log n) time despite the rotation.',
+      'To summarize, the Python solution runs a modified binary search that determines which half of the current window is sorted, then narrows to whichever half could contain target. What do you think of the solution?',
     hleJava:
-      'The Java solution performs binary search while determining on each iteration whether the left or right half of the window is sorted, comparing nums[left] to nums[mid]. It then checks whether target lies within the sorted half\'s value range to decide which side to keep searching, returning the index once nums[mid] equals target.',
+      'To summarize, the Java solution performs binary search, determining on each iteration which half of the window is sorted and narrowing to whichever half could contain target. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution uses a standard binary search loop but adds a check for which half of the current window is sorted by comparing nums[left] and nums[mid]. It then narrows left or right based on whether target falls inside that sorted half\'s range, converging on the answer in O(log n) time.',
+      'To summarize, the JavaScript solution runs a binary search loop that checks which half of the current window is sorted, then narrows left or right based on where target falls. What do you think of the solution?',
     hleCpp:
-      'The C++ solution binary searches over the rotated array, first identifying whether the left or right half of the current window is sorted by comparing nums[left] to nums[mid]. It then uses target\'s value relative to that sorted half\'s bounds to decide which side to discard, finding the target in logarithmic time.',
+      'To summarize, the C++ solution binary searches the rotated array, determining which half of the window is sorted and narrowing to the half that could contain target. What do you think of the solution?',
     dlePython:
       'lines 3-5\nThe algorithm maintains two pointers, left and right, spanning the whole array, and computes mid = (left + right) // 2 on each iteration of the while loop.\n\nlines 6-7\nIf nums[mid] equals target, the index is returned immediately.\n\nlines 8-12\nOtherwise the code checks nums[left] <= nums[mid] to determine whether the left half of the current window is the sorted portion; if it is, and target falls within [nums[left], nums[mid]), the search continues in the left half by setting right = mid - 1, otherwise it moves to the right half with left = mid + 1.\n\nlines 13-17\nIf instead the right half is the sorted portion, the same logic applies in reverse: if target falls within (nums[mid], nums[right]], the search continues right, otherwise it moves left.\n\nlines 1-18\nThis half-sorted check is the key insight that lets binary search still work in O(log n) time on a rotated array, since exactly one of the two halves around mid is guaranteed to be in ascending order.',
     dleJava:
@@ -1090,13 +1090,13 @@ public:
       'asteroids[i] != 0',
     ],
     hlePython:
-      'The Python solution processes asteroids left to right, maintaining a deque of surviving asteroids and resolving collisions between each new left-moving asteroid and the front of the deque. Depending on the relative sizes, the front asteroid is popped, the incoming asteroid is discarded, or both explode, and surviving asteroids are appended to the deque for the final result.',
+      'To summarize, the Python solution processes asteroids left to right with a deque of survivors, resolving each collision by comparing sizes and appending survivors to build the final result. What do you think of the solution?',
     hleJava:
-      'The Java solution iterates through the asteroids array while maintaining a Queue<Integer> of survivors, comparing each new left-moving asteroid against the front of the queue to resolve collisions. Based on the comparison it polls the front, marks the incoming asteroid as destroyed, or both, before adding any surviving asteroid to the queue and converting it to an array at the end.',
+      'To summarize, the Java solution processes asteroids with a Queue of survivors, resolving each collision by comparing sizes before adding survivors and converting the queue to an array. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution walks through the asteroids array while keeping a queue array of survivors, checking each new left-moving asteroid against the front of the queue to determine the outcome of a collision. Depending on the relative magnitudes it shifts the front element off, marks the new asteroid as destroyed, or both, then pushes any surviving asteroid onto the queue for the final result.',
+      'To summarize, the JavaScript solution walks the asteroids array with a queue of survivors, resolving each collision by comparing sizes and pushing survivors onto the queue for the final result. What do you think of the solution?',
     hleCpp:
-      'The C++ solution processes the asteroids vector while maintaining a deque<int> of survivors, comparing each new left-moving asteroid against the front of the deque to resolve collisions. It pops the front, discards the incoming asteroid, or both depending on their relative sizes, and pushes surviving asteroids onto the back of the deque before converting it to the final result vector.',
+      'To summarize, the C++ solution processes the asteroids vector with a deque of survivors, resolving each collision by comparing sizes and pushing survivors onto the deque for the final result. What do you think of the solution?',
     dlePython:
       'lines 3-4\nThe algorithm keeps a deque called queue that represents the asteroids that have survived collisions so far, processing the input array from left to right.\n\nlines 5-6\nFor each new asteroid a, an alive flag is set to True, and an inner while loop runs as long as the asteroid is still alive, moving left (a < 0), and there is a positive asteroid at the front of the queue that it could collide with.\n\nlines 7-12\nInside the loop, if the front of the queue is smaller in magnitude than the incoming asteroid, it is popped off with popleft() and the loop continues checking further; if the front is exactly equal in magnitude, both are destroyed by popping the front and setting alive to False; otherwise the front is larger and survives, so alive is set to False without modifying the queue.\n\nlines 13-14\nAfter the while loop settles, if alive is still True the asteroid a is appended to the back of the queue as a survivor.\n\nline 15\nOnce every asteroid has been processed, list(queue) is returned as the final state of all surviving asteroids in their original left-to-right order.',
     dleJava:
@@ -1301,13 +1301,13 @@ public:
       'At most 2 * (10^5) calls will be made to get and put.',
     ],
     hlePython:
-      'The Python solution uses an OrderedDict to store key-value pairs in access order, calling move_to_end whenever a key is read or updated so the most recently used entry is always last. When the cache exceeds capacity, popitem(last=False) evicts the least recently used entry from the front in O(1) time.',
+      'To summarize, the Python solution uses an OrderedDict to track access order, moving accessed keys to the end and evicting the least recently used entry from the front when over capacity. What do you think of the solution?',
     hleJava:
-      'The Java solution extends LinkedHashMap configured with accessOrder=true, which automatically reorders entries by recency on every get or put. It overrides removeEldestEntry to evict the oldest entry whenever the map grows past capacity, all handled internally by the LinkedHashMap.',
+      'To summarize, the Java solution extends LinkedHashMap with accessOrder enabled and overrides removeEldestEntry to automatically evict the oldest entry whenever the map exceeds capacity. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution relies on a Map, which preserves insertion order, to simulate an LRU cache: on access it deletes and re-inserts a key to move it to the most-recently-used end. When the cache exceeds capacity, it removes the first key returned by the Map\'s iterator, which is the least recently used entry.',
+      'To summarize, the JavaScript solution uses a Map to track insertion order, re-inserting accessed keys to mark them as most recently used and removing the oldest key when over capacity. What do you think of the solution?',
     hleCpp:
-      'The C++ solution combines a doubly linked list (list<pair<int,int>>) that tracks usage order with an unordered_map from key to list iterator for O(1) lookups. On every access it splices the accessed node to the front of the list, and evicts the node at the back of the list when the cache exceeds capacity.',
+      'To summarize, the C++ solution combines a doubly linked list for usage order with a hash map for O(1) lookups, splicing accessed nodes to the front and evicting from the back when over capacity. What do you think of the solution?',
     dlePython:
       'line 6\nThe LRUCache class wraps an OrderedDict, which is a dictionary that also maintains insertion order and supports efficient reordering.\n\nlines 8-12\nOn get, if the key is missing it returns -1; otherwise it calls self.cache.move_to_end(key) to mark that key as most recently used before returning its value, since OrderedDict keeps recently touched keys at the end.\n\nlines 14-17\nOn put, if the key already exists it is first moved to the end to refresh its recency, then self.cache[key] = value inserts or updates the entry.\n\nlines 18-19\nAfter insertion, if len(self.cache) > self.capacity, self.cache.popitem(last=False) removes the item at the front of the ordered dict, which is always the least recently used entry.\n\nlines 1-19\nBecause OrderedDict supports O(1) move-to-end and pop-from-front operations, both get and put run in O(1) time as required by the problem\'s constraints.',
     dleJava:
@@ -1449,13 +1449,13 @@ private:
       '0 <= shifts[i] <= 10^9',
     ],
     hlePython:
-      'The Python solution walks the string from the last character to the first, computing each character\'s new value with (ord(s[i]) - ord(\'a\') + shifts[i]) % 26 and writing it into a result list. Iterating from the end lets each position\'s shift amount be looked up directly from the shifts array before the final list is joined back into a string.',
+      'To summarize, the Python solution walks the string from the last character to the first, shifting each character according to its shifts[i] value and joining the results into the final string. What do you think of the solution?',
     hleJava:
-      'The Java solution converts the string to a char array and iterates from the last index to the first, computing each character\'s shifted value with (result[i] - \'a\' + shifts[i]) % 26. Processing in reverse allows each character to be shifted according to its corresponding shifts[i] entry, and the char array is converted back into the final String.',
+      'To summarize, the Java solution iterates a char array from the last index to the first, shifting each character according to its shifts[i] value before converting it back into the final String. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution splits the string into an array of characters and loops from the last index down to the first, computing each character\'s new code with (s.charCodeAt(i) - 97 + shifts[i]) % 26. Iterating backward lets the function pair each position directly with its shifts[i] value before the array is joined back into the result string.',
+      'To summarize, the JavaScript solution loops over the character array from the last index to the first, shifting each character according to its shifts[i] value and joining the result into a string. What do you think of the solution?',
     hleCpp:
-      'The C++ solution copies the input string into result and iterates from the last index to the first, computing each character\'s new value with (result[i] - \'a\' + shifts[i]) % 26. Walking the string in reverse allows each character to be shifted using its own shifts[i] entry, and the modified string is returned directly.',
+      'To summarize, the C++ solution iterates the string from the last index to the first, shifting each character according to its shifts[i] value and returning the modified string directly. What do you think of the solution?',
     dlePython:
       'line 3\nThe function first copies the input string into a mutable list called result, since Python strings are immutable and individual characters need to be reassigned.\n\nline 4\nA for loop iterates i from len(s) - 1 down to 0, processing the string from its last character back to its first.\n\nline 5\nFor each index, shifted is computed as (ord(s[i]) - ord(\'a\') + shifts[i]) % 26, converting the character to its zero-based alphabet position, adding the corresponding shifts[i] value, and wrapping around with modulo 26 so \'z\' cycles back to \'a\'.\n\nline 6\nThe computed value is converted back to a character with chr(ord(\'a\') + shifted) and written into result[i], directly using the index i to look up the matching entry in the shifts array.\n\nline 7\nOnce the loop completes, \'\'.join(result) reassembles the list of characters into the final shifted string, which is returned as the answer.',
     dleJava:
@@ -1574,13 +1574,13 @@ public:
       '-10^9 <= target <= 10^9',
     ],
     hlePython:
-      'The Python solution uses bisect.bisect_left to locate the first index where target would be inserted to keep nums sorted, which becomes the left boundary of the range. The right boundary is then derived from that same bisect_left index minus one, and both boundaries are returned together as the answer.',
+      'To summarize, the Python solution uses bisect.bisect_left to find target\'s insertion index as the left boundary, then derives the right boundary by subtracting one from that same index. What do you think of the solution?',
     hleJava:
-      'The Java solution implements a private lowerBound helper that binary searches for the first index whose value is not less than a given target. Both the left and right boundaries of the answer are computed by calling lowerBound with target, with the right boundary subtracting one from that index.',
+      'To summarize, the Java solution uses a private lowerBound binary search helper to find target\'s left boundary, then derives the right boundary by subtracting one from that same index. What do you think of the solution?',
     hleJS:
-      'The JavaScript solution defines a lowerBound closure that binary searches for the first index whose value is not less than a given target. It calls lowerBound(target) to find the left boundary and derives the right boundary by subtracting one from that same lowerBound(target) result.',
+      'To summarize, the JavaScript solution uses a lowerBound closure to binary search for target\'s left boundary, then derives the right boundary by subtracting one from that same result. What do you think of the solution?',
     hleCpp:
-      'The C++ solution uses the standard library\'s lower_bound to find the first position in the sorted vector where target could be inserted without breaking order, which becomes the left boundary. The right boundary is computed by calling lower_bound(nums.begin(), nums.end(), target) again and subtracting one from the resulting index.',
+      'To summarize, the C++ solution uses the standard library\'s lower_bound to find target\'s left boundary, then derives the right boundary by calling lower_bound again and subtracting one. What do you think of the solution?',
     dlePython:
       'line 5\nThe searchRange method calls bisect.bisect_left(nums, target), which performs a binary search to find the leftmost index where target could be inserted while keeping nums sorted; this index is stored as left.\n\nlines 6-7\nIf left equals len(nums) or the value at that index does not equal target, the function short-circuits and returns [-1, -1], since target is not present in the array.\n\nline 8\nOtherwise, right is computed by calling bisect.bisect_left(nums, target) a second time and subtracting one, using the same lower-bound index as a reference point for the end of the target\'s range.\n\nline 9\nBoth left and right are then packaged together into a single list and returned as the final [start, end] answer.\n\nlines 5, 8\nBecause bisect_left runs in O(log n) time and is called twice, the overall solution stays within logarithmic time complexity as required by the problem\'s constraints.',
     dleJava:
