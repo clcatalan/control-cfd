@@ -1,3 +1,9 @@
+/* This page's table has many columns, so it needs more room than the
+   1000px cap other admin pages use (set in Dashboard.css .dashboard-content) */
+.dashboard-content.user-detail-page {
+  max-width: 100%;
+}
+
 .back-link {
   display: inline-block;
   margin-bottom: 1rem;
@@ -33,6 +39,37 @@
   color: #2c3e50;
 }
 
+.score-summary {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 1.25rem;
+  background: #f7f8fc;
+  border: 1px solid #ececf3;
+  border-radius: 8px;
+  min-width: 160px;
+}
+
+.score-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #5a5f73;
+}
+
+.score-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
 .response-cell {
   font-weight: 600;
 }
@@ -45,9 +82,21 @@
   color: #c0392b;
 }
 
+.response-timeout {
+  color: #d68910;
+}
+
 .response-none {
   color: #95a5a6;
   font-weight: 400;
+}
+
+.event-metadata-cell {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #555;
+  max-width: 320px;
+  overflow-wrap: break-word;
 }
 
 .users-table tbody tr.row-red {

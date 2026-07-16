@@ -286,6 +286,8 @@ app.post('/api/users/:participantId/group', async (req, res) => {
   }
 });
 
+const VALID_COMPLETION_RESPONSES = ['accept', 'reject', 'timeout'];
+
 // Record that a participant completed a problem (called by the study frontend)
 app.post('/api/users/:participantId/completions', async (req, res) => {
   try {
@@ -294,6 +296,10 @@ app.post('/api/users/:participantId/completions', async (req, res) => {
 
     if (!problemId) {
       return res.status(400).json({ success: false, message: 'problemId is required' });
+    }
+
+    if (response && !VALID_COMPLETION_RESPONSES.includes(response)) {
+      return res.status(400).json({ success: false, message: 'Invalid response value' });
     }
 
     await db.markProblemCompleted(participantId, problemId, response);
@@ -341,6 +347,46 @@ app.get('/api/users/:participantId/progress', async (req, res) => {
       success: false,
       message: 'Error fetching progress'
     });
+  }
+});
+
+// Record a generic UI event for a participant (called by the study frontend)
+app.post('/api/users/:participantId/events', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const { eventName, metadata } = req.body;
+
+    if (!eventName || typeof eventName !== 'string' || !eventName.trim()) {
+      return res.status(400).json({ success: false, message: 'eventName is required' });
+    }
+
+    await db.logEvent(participantId, eventName.trim(), metadata);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error logging event:', error);
+
+    if (error.message === 'User not found') {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(500).json({ success: false, message: 'Error logging event' });
+  }
+});
+
+// Get a participant's logged events (admin use)
+app.get('/api/users/:participantId/events', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const events = await db.getUserEvents(participantId);
+
+    if (events === null) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, participantId, events });
+  } catch (error) {
+    console.error('Error fetching events:', error);
+    res.status(500).json({ success: false, message: 'Error fetching events' });
   }
 });
 

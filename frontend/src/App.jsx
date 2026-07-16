@@ -1,13 +1,21 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import ProblemPanel from './components/ProblemPanel'
 import EditorPanel from './components/EditorPanel'
 import ExplanationPanel from './components/ExplanationPanel'
 import Login from './components/Login'
 import ProblemList from './components/ProblemList'
 import { useAiNarration } from './hooks/useAiNarration'
+import { logEvent, formatTimestamp } from './utils/logEvent'
 import './App.css'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
+const PROBLEM_TIME_LIMIT_SECONDS = 15 * 60
+
+const formatTime = (totalSeconds) => {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -21,6 +29,11 @@ function App() {
   const [middleWidth, setMiddleWidth] = useState(40)
   const [activeHandle, setActiveHandle] = useState(null)
   const [completedProblemIds, setCompletedProblemIds] = useState([])
+  const [timeRemaining, setTimeRemaining] = useState(PROBLEM_TIME_LIMIT_SECONDS)
+  // Tracks whether the voice narration's first read-through (not a replay) has
+  // already been logged, so only the very first completion is recorded.
+  const wasNarrationSpeakingRef = useRef(false)
+  const firstReadCompletedLoggedRef = useRef(false)
 
   // Voice narration is a study treatment: only participants assigned to the
   // "experimental" group (via the admin panel) get it. Anyone else (control
@@ -86,17 +99,33 @@ function App() {
     setSelectedProblem(problem)
     setAiSolutionGenerated(false)
     setIsGenerating(false)
+    wasNarrationSpeakingRef.current = false
+    firstReadCompletedLoggedRef.current = false
   }
 
   const handleLanguageChange = (newLanguage) => {
     setLanguage(newLanguage)
     setAiSolutionGenerated(false)
     setIsGenerating(false)
+
+    logEvent(participantId, 'language_selected', {
+      problemId: selectedProblem?.id,
+      language: newLanguage,
+      timestamp: formatTimestamp(),
+    })
   }
 
   const handleGenerateStart = () => {
     setAiSolutionGenerated(false)
     setIsGenerating(true)
+    wasNarrationSpeakingRef.current = false
+    firstReadCompletedLoggedRef.current = false
+
+    logEvent(participantId, 'generate_ai_solution_clicked', {
+      problemId: selectedProblem?.id,
+      language,
+      timestamp: formatTimestamp(),
+    })
   }
 
   const handleGenerateComplete = () => {
@@ -104,9 +133,36 @@ function App() {
     setAiSolutionGenerated(true)
   }
 
+  // Experimental-group only: log the moment the voice narration's first read-through
+  // (not a replay) finishes. Guarded so only the very first completion is recorded —
+  // subsequent replays via "Play AI Explanation Again" are ignored.
+  useEffect(() => {
+    if (narration.isSpeaking) {
+      wasNarrationSpeakingRef.current = true
+      return
+    }
+    if (wasNarrationSpeakingRef.current && !narration.isReplaying && !firstReadCompletedLoggedRef.current) {
+      firstReadCompletedLoggedRef.current = true
+      logEvent(participantId, 'voice_explanation_completed', {
+        problemId: selectedProblem?.id,
+        timestamp: formatTimestamp(),
+      })
+    }
+    wasNarrationSpeakingRef.current = false
+  }, [narration.isSpeaking, narration.isReplaying])
+
   const handleSolutionResolved = (problemId, response) => {
     setCompletedProblemIds((prev) => (prev.includes(problemId) ? prev : [...prev, problemId]))
     setSelectedProblem(null)
+
+    if (response === 'accept' || response === 'reject') {
+      logEvent(participantId, 'accept_reject_clicked', {
+        problemId,
+        response,
+        studyGroup: isExperimental ? 'experimental' : 'control',
+        timestamp: formatTimestamp(),
+      })
+    }
 
     fetch(`${API_URL}/users/${participantId}/completions`, {
       method: 'POST',
@@ -114,6 +170,31 @@ function App() {
       body: JSON.stringify({ problemId, response })
     }).catch((err) => console.error('Error syncing completed problem:', err))
   }
+
+  // Give the participant 15 minutes per problem. If they haven't accepted or
+  // rejected the solution by then, record a timeout and send them back to the list.
+  useEffect(() => {
+    if (!selectedProblem) return
+
+    logEvent(participantId, 'problem_opened', {
+      problemId: selectedProblem.id,
+      timestamp: formatTimestamp(),
+    })
+    setTimeRemaining(PROBLEM_TIME_LIMIT_SECONDS)
+
+    const intervalId = setInterval(() => {
+      setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0))
+    }, 1000)
+
+    const timeoutId = setTimeout(() => {
+      handleSolutionResolved(selectedProblem.id, 'timeout')
+    }, PROBLEM_TIME_LIMIT_SECONDS * 1000)
+
+    return () => {
+      clearInterval(intervalId)
+      clearTimeout(timeoutId)
+    }
+  }, [selectedProblem])
 
   const handleMouseDown = (handle) => {
     setActiveHandle(handle)
@@ -155,6 +236,12 @@ function App() {
     }
   }, [activeHandle, leftWidth, middleWidth])
 
+  // Experimental-group only: count each time the participant replays the voice explanation
+  const handleReplay = () => {
+    logEvent(participantId, 'repeated_voice_explanation', { problemId: selectedProblem?.id })
+    narration.replay()
+  }
+
   const rightWidth = 100 - leftWidth - middleWidth
 
   // Show login page if not logged in
@@ -185,6 +272,9 @@ function App() {
           <span className="participant-id">Participant: {participantId}</span>
         </div>
         <div className="header-right">
+          <span className={`timer ${timeRemaining <= 60 ? 'timer-warning' : ''}`}>
+            Time left: {formatTime(timeRemaining)}
+          </span>
           <button className="logout-button" onClick={handleLogout}>
             Logout
           </button>
@@ -223,7 +313,7 @@ function App() {
             currentBlockIndex={narration.currentBlockIndex}
             isSpeaking={narration.isSpeaking}
             isReplaying={narration.isReplaying}
-            onReplay={narration.replay}
+            onReplay={handleReplay}
           />
         </div>
       </div>

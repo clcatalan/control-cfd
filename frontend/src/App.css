@@ -52,6 +52,19 @@
 .header-right {
   display: flex;
   align-items: center;
+  gap: 14px;
+}
+
+.timer {
+  color: #e0e0e0;
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.timer-warning {
+  color: #ff5c5c;
 }
 
 .logout-button {

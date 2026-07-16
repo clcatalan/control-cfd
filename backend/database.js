@@ -75,6 +75,19 @@ async function initializeDatabase() {
   `);
   console.log('Problem completions table ready');
 
+  // Generic log of participant UI events/metrics (e.g. "opened_problem", "language_changed").
+  // New event types are just new event_name strings — no schema changes needed.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS user_events (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      event_name TEXT NOT NULL,
+      metadata JSONB,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  console.log('User events table ready');
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS study_settings (
       id INTEGER PRIMARY KEY DEFAULT 1,
@@ -196,6 +209,32 @@ const dbOperations = {
     }
     const { rows } = await pool.query(
       'SELECT problem_id, completed_at, response FROM problem_completions WHERE user_id = $1',
+      [user.id]
+    );
+    return rows;
+  },
+
+  // Log a generic UI event for a participant. eventName is free-form; metadata is an optional JSON object.
+  logEvent: async (participantId, eventName, metadata) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    await pool.query(
+      'INSERT INTO user_events (user_id, event_name, metadata) VALUES ($1, $2, $3)',
+      [user.id, eventName, metadata || null]
+    );
+    return { userId: user.id, eventName };
+  },
+
+  // Get a participant's logged events (most recent first), or null if the participant doesn't exist
+  getUserEvents: async (participantId) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      return null;
+    }
+    const { rows } = await pool.query(
+      'SELECT event_name, metadata, created_at FROM user_events WHERE user_id = $1 ORDER BY created_at DESC',
       [user.id]
     );
     return rows;
