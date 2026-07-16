@@ -244,3 +244,51 @@ p.explanation-text.is-speaking {
   transform: none;
   box-shadow: none;
 }
+
+.btn-submit,
+.btn-back {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-submit {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.btn-submit:hover {
+  background-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+}
+
+.btn-back {
+  background-color: #3c3c3c;
+  color: #fff;
+}
+
+.btn-back:hover {
+  background-color: #4c4c4c;
+  transform: translateY(-1px);
+}
+
+.btn-back:active {
+  transform: translateY(0);
+}
+
+.btn-submit:disabled,
+.btn-back:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}

@@ -73,6 +73,12 @@ async function initializeDatabase() {
   await pool.query(`
     ALTER TABLE problem_completions ADD COLUMN IF NOT EXISTS response TEXT
   `);
+  await pool.query(`
+    ALTER TABLE problem_completions ADD COLUMN IF NOT EXISTS submitted_code TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE problem_completions ADD COLUMN IF NOT EXISTS leetcode_verified TEXT
+  `);
   console.log('Problem completions table ready');
 
   // Generic log of participant UI events/metrics (e.g. "opened_problem", "language_changed").
@@ -186,17 +192,18 @@ const dbOperations = {
     return isValid ? admin : null;
   },
 
-  // Record that a participant completed a problem, along with their accept/reject response (idempotent)
-  markProblemCompleted: async (participantId, problemId, response) => {
+  // Record that a participant completed a problem, along with their accept/reject response (idempotent).
+  // `code` is the edited solution text submitted after a reject, when applicable.
+  markProblemCompleted: async (participantId, problemId, response, code) => {
     const user = await dbOperations.findUserByParticipantId(participantId);
     if (!user) {
       throw new Error('User not found');
     }
     await pool.query(
-      `INSERT INTO problem_completions (user_id, problem_id, response)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (user_id, problem_id) DO UPDATE SET response = EXCLUDED.response`,
-      [user.id, problemId, response || null]
+      `INSERT INTO problem_completions (user_id, problem_id, response, submitted_code)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (user_id, problem_id) DO UPDATE SET response = EXCLUDED.response, submitted_code = EXCLUDED.submitted_code`,
+      [user.id, problemId, response || null, code || null]
     );
     return { userId: user.id, problemId };
   },
@@ -208,10 +215,27 @@ const dbOperations = {
       return null;
     }
     const { rows } = await pool.query(
-      'SELECT problem_id, completed_at, response FROM problem_completions WHERE user_id = $1',
+      'SELECT problem_id, completed_at, response, submitted_code, leetcode_verified FROM problem_completions WHERE user_id = $1',
       [user.id]
     );
     return rows;
+  },
+
+  // Record an admin's manual verification of whether a rejected/edited submission
+  // actually passes on LeetCode ('passed' or 'failed')
+  setLeetcodeVerification: async (participantId, problemId, verification) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const { rowCount } = await pool.query(
+      'UPDATE problem_completions SET leetcode_verified = $1 WHERE user_id = $2 AND problem_id = $3',
+      [verification, user.id, problemId]
+    );
+    if (rowCount === 0) {
+      throw new Error('Completion not found');
+    }
+    return { userId: user.id, problemId, verification };
   },
 
   // Log a generic UI event for a participant. eventName is free-form; metadata is an optional JSON object.
@@ -288,14 +312,15 @@ const dbOperations = {
     return rows[0];
   },
 
-  // Clear every participant's completion history and the problem schedule, then
-  // unlock all problems. Admin "Reset All Progress" action — global, irreversible.
+  // Clear every participant's completion history, logged event timestamps, and the
+  // problem schedule, then unlock all problems. Admin "Reset All Progress" action — global, irreversible.
   resetAllProgress: async () => {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
       await client.query('DELETE FROM problem_completions');
       await client.query('DELETE FROM problem_schedule');
+      await client.query('DELETE FROM user_events');
       const { rows } = await client.query(
         'UPDATE study_settings SET all_problems_enabled = true WHERE id = 1 RETURNING all_problems_enabled'
       );

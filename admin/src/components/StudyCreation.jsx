@@ -85,7 +85,7 @@ function StudyCreation() {
 
   const handleResetProgress = async () => {
     const confirmed = confirm(
-      "This will permanently clear EVERY participant's completed-problem history and the entire problem schedule, then unlock all problems for everyone. This cannot be undone. Continue?"
+      "This will permanently clear EVERY participant's completed-problem history, logged activity timestamps, and the entire problem schedule, then unlock all problems for everyone. This cannot be undone. Continue?"
     )
     if (!confirmed) return
 

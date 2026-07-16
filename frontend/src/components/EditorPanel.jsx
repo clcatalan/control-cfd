@@ -9,8 +9,7 @@ const defaultCode = {
   cpp: ``
 }
 
-function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onGenerateComplete, activeLineRanges }) {
-  const [code, setCode] = useState(null)
+function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onGenerateComplete, activeLineRanges, code, onCodeChange, readOnly }) {
   const [isGenerating, setIsGenerating] = useState(false)
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
@@ -42,11 +41,11 @@ function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onG
   const handleLanguageChange = (e) => {
     const newLang = e.target.value
     onLanguageChange(newLang)
-    setCode(defaultCode[newLang])
+    onCodeChange?.(defaultCode[newLang])
   }
 
   const handleEditorChange = (value) => {
-    setCode(value)
+    onCodeChange?.(value)
   }
 
   const handleRun = () => {
@@ -55,9 +54,8 @@ function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onG
       setIsGenerating(true)
       onGenerateStart?.()
       setTimeout(() => {
-        setCode(solution)
         setIsGenerating(false)
-        onGenerateComplete?.()
+        onGenerateComplete?.(solution)
       }, 3000)
     } else {
       alert(`No pre-defined ${language} solution available for this problem yet.`)
@@ -78,6 +76,9 @@ function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onG
             <option value="java">Java</option>
             <option value="cpp">C++</option>
           </select>
+        </div>
+        <div className="editor-state">
+          {readOnly ? <span className="read-only-label">Read-Only</span> : <span className="editable-label">Editable</span>}
         </div>
         <div className="editor-actions">
           <button className="btn-run" onClick={handleRun} disabled={isGenerating}>
@@ -100,8 +101,8 @@ function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onG
           onMount={handleEditorMount}
           theme="vs-dark"
           options={{
-            readOnly: true,
-            domReadOnly: true,
+            readOnly: readOnly ?? true,
+            domReadOnly: readOnly ?? true,
             minimap: { enabled: false },
             fontSize: 14,
             fontFamily: "'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace",

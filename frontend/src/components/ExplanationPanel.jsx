@@ -37,6 +37,10 @@ function ExplanationPanel({
   isSpeaking,
   isReplaying,
   onReplay,
+  isEditing,
+  onStartEditing,
+  onCancelEditing,
+  onSubmit,
 }) {
   const [pendingAction, setPendingAction] = useState(null)
 
@@ -47,9 +51,21 @@ function ExplanationPanel({
   }
 
   const confirmReject = () => {
-    console.log('Solution rejected')
+    console.log('Solution rejected, entering edit mode')
     setPendingAction(null)
-    onResolved?.(problem?.id, 'reject')
+    onStartEditing?.()
+  }
+
+  const confirmSubmit = () => {
+    console.log('Edited solution submitted')
+    setPendingAction(null)
+    onSubmit?.()
+  }
+
+  const confirmBack = () => {
+    console.log('Editing cancelled, reverting to read-only')
+    setPendingAction(null)
+    onCancelEditing?.()
   }
 
   const fields = languageFields[language] || languageFields.javascript
@@ -103,12 +119,25 @@ function ExplanationPanel({
       </div>
 
       <div className="explanation-footer">
-        <button className="btn-reject" onClick={() => setPendingAction('reject')} disabled={!visible || isSpeaking}>
-          Reject
-        </button>
-        <button className="btn-accept" onClick={() => setPendingAction('accept')} disabled={!visible || isSpeaking}>
-          Accept
-        </button>
+        {isEditing ? (
+          <>
+            <button className="btn-back" onClick={() => setPendingAction('back')} disabled={!visible || isSpeaking}>
+              &larr; Back
+            </button>
+            <button className="btn-submit" onClick={() => setPendingAction('submit')} disabled={!visible || isSpeaking}>
+              Submit
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="btn-reject" onClick={() => setPendingAction('reject')} disabled={!visible || isSpeaking}>
+              Reject
+            </button>
+            <button className="btn-accept" onClick={() => setPendingAction('accept')} disabled={!visible || isSpeaking}>
+              Accept
+            </button>
+          </>
+        )}
       </div>
 
       <ConfirmDialog
@@ -124,10 +153,30 @@ function ExplanationPanel({
       <ConfirmDialog
         open={pendingAction === 'reject'}
         title="Reject AI solution?"
-        message="By rejecting the solution, you have evaluated that it would fail some or all test cases, do you want to proceed?"
-        confirmLabel="Reject"
+        message={`By rejecting the solution, you have evaluated that it would fail some or all test cases.\n\nThis would make the text editor writable, and allow you to make changes to AI's solution until you have evaluated it to be correct and pass all test cases.\n\nDo you want to proceed?`}
+        confirmLabel="Proceed"
         variant="reject"
         onConfirm={confirmReject}
+        onCancel={() => setPendingAction(null)}
+      />
+
+      <ConfirmDialog
+        open={pendingAction === 'submit'}
+        title="Submit your solution?"
+        message="This will save your current code as your final submission for this problem. Do you want to proceed?"
+        confirmLabel="Submit"
+        variant="accept"
+        onConfirm={confirmSubmit}
+        onCancel={() => setPendingAction(null)}
+      />
+
+      <ConfirmDialog
+        open={pendingAction === 'back'}
+        title="Return to read-only mode?"
+        message="This would return the editor to read-only mode, and will revert back to the original AI-generated solution, do you want to proceed?"
+        confirmLabel="Proceed"
+        variant="reject"
+        onConfirm={confirmBack}
         onCancel={() => setPendingAction(null)}
       />
     </div>

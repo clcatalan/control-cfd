@@ -25,6 +25,9 @@ function App() {
   const [language, setLanguage] = useState('javascript')
   const [aiSolutionGenerated, setAiSolutionGenerated] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [code, setCode] = useState(null)
+  const [originalSolution, setOriginalSolution] = useState(null)
+  const [isEditingSolution, setIsEditingSolution] = useState(false)
   const [leftWidth, setLeftWidth] = useState(30)
   const [middleWidth, setMiddleWidth] = useState(40)
   const [activeHandle, setActiveHandle] = useState(null)
@@ -99,6 +102,9 @@ function App() {
     setSelectedProblem(problem)
     setAiSolutionGenerated(false)
     setIsGenerating(false)
+    setCode(null)
+    setOriginalSolution(null)
+    setIsEditingSolution(false)
     wasNarrationSpeakingRef.current = false
     firstReadCompletedLoggedRef.current = false
   }
@@ -107,6 +113,7 @@ function App() {
     setLanguage(newLanguage)
     setAiSolutionGenerated(false)
     setIsGenerating(false)
+    setIsEditingSolution(false)
 
     logEvent(participantId, 'language_selected', {
       problemId: selectedProblem?.id,
@@ -118,6 +125,7 @@ function App() {
   const handleGenerateStart = () => {
     setAiSolutionGenerated(false)
     setIsGenerating(true)
+    setIsEditingSolution(false)
     wasNarrationSpeakingRef.current = false
     firstReadCompletedLoggedRef.current = false
 
@@ -128,9 +136,23 @@ function App() {
     })
   }
 
-  const handleGenerateComplete = () => {
+  const handleGenerateComplete = (solution) => {
     setIsGenerating(false)
     setAiSolutionGenerated(true)
+    setCode(solution)
+    setOriginalSolution(solution)
+  }
+
+  // Reject flow: entering edit mode makes the editor writable so the participant
+  // can revise the AI solution before submitting it.
+  const handleStartEditingSolution = () => {
+    setIsEditingSolution(true)
+  }
+
+  // "<- Back" discards any edits and returns to the read-only Accept/Reject view.
+  const handleCancelEditingSolution = () => {
+    setIsEditingSolution(false)
+    setCode(originalSolution)
   }
 
   // Experimental-group only: log the moment the voice narration's first read-through
@@ -151,9 +173,10 @@ function App() {
     wasNarrationSpeakingRef.current = false
   }, [narration.isSpeaking, narration.isReplaying])
 
-  const handleSolutionResolved = (problemId, response) => {
+  const handleSolutionResolved = (problemId, response, submittedCode = null) => {
     setCompletedProblemIds((prev) => (prev.includes(problemId) ? prev : [...prev, problemId]))
     setSelectedProblem(null)
+    setIsEditingSolution(false)
 
     if (response === 'accept' || response === 'reject') {
       logEvent(participantId, 'accept_reject_clicked', {
@@ -167,8 +190,14 @@ function App() {
     fetch(`${API_URL}/users/${participantId}/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ problemId, response })
+      body: JSON.stringify({ problemId, response, code: submittedCode })
     }).catch((err) => console.error('Error syncing completed problem:', err))
+  }
+
+  // Submit flow: the (possibly edited) code in the editor is stored as the participant's
+  // final answer, recorded under the same 'reject' response as the confirmation that opened editing.
+  const handleSubmitEditedSolution = () => {
+    handleSolutionResolved(selectedProblem?.id, 'reject', code)
   }
 
   // Give the participant 15 minutes per problem. If they haven't accepted or
@@ -296,6 +325,9 @@ function App() {
             onGenerateStart={handleGenerateStart}
             onGenerateComplete={handleGenerateComplete}
             activeLineRanges={narration.currentLineRanges}
+            code={code}
+            onCodeChange={setCode}
+            readOnly={!isEditingSolution}
           />
         </div>
         <div
@@ -314,6 +346,10 @@ function App() {
             isSpeaking={narration.isSpeaking}
             isReplaying={narration.isReplaying}
             onReplay={handleReplay}
+            isEditing={isEditingSolution}
+            onStartEditing={handleStartEditingSolution}
+            onCancelEditing={handleCancelEditingSolution}
+            onSubmit={handleSubmitEditedSolution}
           />
         </div>
       </div>

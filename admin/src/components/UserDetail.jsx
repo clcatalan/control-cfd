@@ -13,6 +13,52 @@ function UserDetail() {
   const [events, setEvents] = useState([])
   const [eventsLoading, setEventsLoading] = useState(true)
   const [eventsError, setEventsError] = useState('')
+  const [viewingSolution, setViewingSolution] = useState(null)
+  const [copied, setCopied] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+
+  useEffect(() => {
+    setCopied(false)
+  }, [viewingSolution])
+
+  const handleCopyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(viewingSolution?.code || '')
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('Error copying code:', err)
+    }
+  }
+
+  const handleVerify = async (verification) => {
+    if (!viewingSolution) return
+    setVerifying(true)
+    try {
+      const response = await fetch(
+        `${API_URL}/users/${encodeURIComponent(participantId)}/problems/${viewingSolution.problemId}/leetcode-verification`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ verification }),
+        }
+      )
+      const data = await response.json()
+      if (data.success) {
+        setViewingSolution((prev) => (prev ? { ...prev, leetcodeVerified: verification } : prev))
+        setProgress((prev) =>
+          prev.map((p) => (p.id === viewingSolution.problemId ? { ...p, leetcodeVerified: verification } : p))
+        )
+      } else {
+        alert(data.message || 'Failed to save verification')
+      }
+    } catch (err) {
+      console.error('Error saving LeetCode verification:', err)
+      alert('Failed to save verification')
+    } finally {
+      setVerifying(false)
+    }
+  }
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -79,12 +125,13 @@ function UserDetail() {
   const overRelianceCount = progress.filter((p) => redProblemIds.has(p.id) && p.response === 'accept').length
   const overRelianceScore = `${overRelianceCount}/${redProblemIds.size}`
 
-  // How often the participant made the correct call (accepting a correct solution
-  // or rejecting a flawed one), out of all problems
+  // How often the participant made the correct call, out of all problems: accepting a
+  // correct solution, or rejecting a flawed one with a resubmitted fix that the admin
+  // has manually confirmed actually passes on LeetCode
   const accuracyCount = progress.filter(
     (p) =>
       (greenProblemIds.has(p.id) && p.response === 'accept') ||
-      (redProblemIds.has(p.id) && p.response === 'reject')
+      (redProblemIds.has(p.id) && p.response === 'reject' && !!p.submittedCode && p.leetcodeVerified === 'passed')
   ).length
   const accuracyScore = `${accuracyCount}/${greenProblemIds.size + redProblemIds.size}`
 
@@ -158,13 +205,13 @@ function UserDetail() {
                 <thead>
                   <tr>
                     <th>Problem Title</th>
-                    <th>Response</th>
-                    <th>Language</th>
                     <th>Problem Opened At</th>
                     <th>Solution Generated At</th>
                     <th>Voice Explanation Completed At</th>
                     <th>Participant Responded At</th>
                     <th>Voice Replays</th>
+                    <th>Language</th>
+                    <th>Response</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -178,15 +225,31 @@ function UserDetail() {
                     return (
                       <tr key={problem.id} className={rowClass(problem)}>
                         <td>{problemLabel(problem)}</td>
-                        <td className={`response-cell response-${problem.response || 'none'}`}>
-                          {responseLabel(problem)}
-                        </td>
-                        <td>{language || '—'}</td>
                         <td>{openedAt || '—'}</td>
                         <td>{generatedAt || '—'}</td>
                         <td>{voiceCompletedAt || '—'}</td>
                         <td>{respondedAtValue || '—'}</td>
                         <td>{replayCount > 0 ? replayCount : '—'}</td>
+                        <td>{language || '—'}</td>
+                        <td className={`response-cell response-${problem.response || 'none'}`}>
+                          {problem.response === 'reject' ? (
+                            <button
+                              className="response-reject-btn"
+                              onClick={() =>
+                                setViewingSolution({
+                                  label: problemLabel(problem),
+                                  code: problem.submittedCode,
+                                  problemId: problem.id,
+                                  leetcodeVerified: problem.leetcodeVerified,
+                                })
+                              }
+                            >
+                              {responseLabel(problem)}
+                            </button>
+                          ) : (
+                            responseLabel(problem)
+                          )}
+                        </td>
                       </tr>
                     )
                   })}
@@ -227,6 +290,46 @@ function UserDetail() {
           </div>
         ) : null}
       </section>
+
+      {viewingSolution && (
+        <div className="modal-overlay" onClick={() => setViewingSolution(null)}>
+          <div className="code-modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>{viewingSolution.label} — Submitted Solution</h3>
+            <pre className="code-modal-pre">{viewingSolution.code || 'No submitted code recorded.'}</pre>
+            <div className="code-modal-footer">
+              <div className="code-modal-verify">
+                <span className="code-modal-verify-label">Verified on Leetcode:</span>
+                <button
+                  className={`verify-btn verify-passed ${viewingSolution.leetcodeVerified === 'passed' ? 'active' : ''}`}
+                  onClick={() => handleVerify('passed')}
+                  disabled={verifying}
+                >
+                  Passed
+                </button>
+                <button
+                  className={`verify-btn verify-failed ${viewingSolution.leetcodeVerified === 'failed' ? 'active' : ''}`}
+                  onClick={() => handleVerify('failed')}
+                  disabled={verifying}
+                >
+                  Failed
+                </button>
+              </div>
+              <div className="code-modal-buttons">
+                <button
+                  className="submit-btn"
+                  onClick={handleCopyCode}
+                  disabled={!viewingSolution.code}
+                >
+                  {copied ? 'Copied!' : 'Copy to Clipboard'}
+                </button>
+                <button className="cancel-btn" onClick={() => setViewingSolution(null)}>
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

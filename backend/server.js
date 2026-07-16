@@ -292,7 +292,7 @@ const VALID_COMPLETION_RESPONSES = ['accept', 'reject', 'timeout'];
 app.post('/api/users/:participantId/completions', async (req, res) => {
   try {
     const { participantId } = req.params;
-    const { problemId, response } = req.body;
+    const { problemId, response, code } = req.body;
 
     if (!problemId) {
       return res.status(400).json({ success: false, message: 'problemId is required' });
@@ -302,7 +302,11 @@ app.post('/api/users/:participantId/completions', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid response value' });
     }
 
-    await db.markProblemCompleted(participantId, problemId, response);
+    if (code !== undefined && code !== null && typeof code !== 'string') {
+      return res.status(400).json({ success: false, message: 'Invalid code value' });
+    }
+
+    await db.markProblemCompleted(participantId, problemId, response, code);
     res.json({ success: true });
   } catch (error) {
     console.error('Error recording completion:', error);
@@ -314,6 +318,37 @@ app.post('/api/users/:participantId/completions', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error recording completion'
+    });
+  }
+});
+
+const VALID_LEETCODE_VERIFICATIONS = ['passed', 'failed'];
+
+// Record an admin's manual verification of a submitted solution against LeetCode (admin use)
+app.post('/api/users/:participantId/problems/:problemId/leetcode-verification', async (req, res) => {
+  try {
+    const { participantId, problemId } = req.params;
+    const { verification } = req.body;
+
+    if (!VALID_LEETCODE_VERIFICATIONS.includes(verification)) {
+      return res.status(400).json({ success: false, message: 'Invalid verification value' });
+    }
+
+    await db.setLeetcodeVerification(participantId, problemId, verification);
+    res.json({ success: true, verification });
+  } catch (error) {
+    console.error('Error setting LeetCode verification:', error);
+
+    if (error.message === 'User not found') {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    if (error.message === 'Completion not found') {
+      return res.status(404).json({ success: false, message: 'Completion not found' });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error setting LeetCode verification'
     });
   }
 });
@@ -336,7 +371,9 @@ app.get('/api/users/:participantId/progress', async (req, res) => {
         title: problem.title,
         completed: Boolean(completion),
         completedAt: completion?.completed_at || null,
-        response: completion?.response || null
+        response: completion?.response || null,
+        submittedCode: completion?.submitted_code || null,
+        leetcodeVerified: completion?.leetcode_verified || null
       };
     });
 
