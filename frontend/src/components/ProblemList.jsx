@@ -111,18 +111,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
                   >
                     <span className="problem-title">Problem {problem.id}</span>
                     <span className="problem-availability">
-                      {
-                        (() => {
-                          if(isUnlocked){
-                            return 'Available'
-                          } else if(!isUnlocked && scheduledDate){
-                            return `Available on ${formatDisplayDate(scheduledDate)}`
-                          } else {
-                            return 'Not scheduled'
-                          }
-                        })
-                      }
-                      {/* {scheduledDate ? `Available on ${formatDisplayDate(scheduledDate)}` : 'Not scheduled'} */}
+                      {scheduledDate ? `Available on ${formatDisplayDate(scheduledDate)}` : 'Not scheduled'}
                     </span>
                     {isCompleted && <span className="problem-done-badge">Done</span>}
                     {!isCompleted && !isUnlocked && <span className="problem-lock-icon">🔒</span>}
