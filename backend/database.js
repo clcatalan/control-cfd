@@ -38,6 +38,9 @@ async function initializeDatabase() {
   await pool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS study_group TEXT
   `);
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ
+  `);
   console.log('Users table ready');
 
   await pool.query(`
@@ -176,6 +179,27 @@ const dbOperations = {
     return rows[0];
   },
 
+  // Record that a participant has watched the onboarding video (idempotent; keeps the first completion time).
+  // Problem availability is gated on this, so it must succeed before any problem unlocks.
+  markOnboardingCompleted: async (participantId) => {
+    const { rows } = await pool.query(
+      `UPDATE users SET onboarding_completed_at = COALESCE(onboarding_completed_at, NOW())
+       WHERE participant_id = $1
+       RETURNING onboarding_completed_at`,
+      [participantId]
+    );
+    return rows[0];
+  },
+
+  // Get a participant's onboarding completion status, or null if the participant doesn't exist
+  getOnboardingStatus: async (participantId) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      return null;
+    }
+    return { completed: Boolean(user.onboarding_completed_at), completedAt: user.onboarding_completed_at };
+  },
+
   // Find admin by username
   findAdminByUsername: async (username) => {
     const { rows } = await pool.query('SELECT * FROM admins WHERE username = $1', [username]);
@@ -312,8 +336,8 @@ const dbOperations = {
     return rows[0];
   },
 
-  // Clear every participant's completion history, logged event timestamps, and the
-  // problem schedule, then unlock all problems. Admin "Reset All Progress" action — global, irreversible.
+  // Clear every participant's completion history, onboarding status, logged event timestamps,
+  // and the problem schedule, then unlock all problems. Admin "Reset All Progress" action — global, irreversible.
   resetAllProgress: async () => {
     const client = await pool.connect();
     try {
@@ -321,6 +345,7 @@ const dbOperations = {
       await client.query('DELETE FROM problem_completions');
       await client.query('DELETE FROM problem_schedule');
       await client.query('DELETE FROM user_events');
+      await client.query('UPDATE users SET onboarding_completed_at = NULL');
       const { rows } = await client.query(
         'UPDATE study_settings SET all_problems_enabled = true WHERE id = 1 RETURNING all_problems_enabled'
       );

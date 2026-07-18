@@ -387,6 +387,46 @@ app.get('/api/users/:participantId/progress', async (req, res) => {
   }
 });
 
+// Get whether a participant has completed the onboarding video (gates problem availability; called by the study frontend)
+app.get('/api/users/:participantId/onboarding', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const status = await db.getOnboardingStatus(participantId);
+
+    if (status === null) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, completed: status.completed, completedAt: status.completedAt });
+  } catch (error) {
+    console.error('Error fetching onboarding status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching onboarding status'
+    });
+  }
+});
+
+// Record that a participant has watched the onboarding video (called by the study frontend)
+app.post('/api/users/:participantId/onboarding', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const result = await db.markOnboardingCompleted(participantId);
+
+    if (!result) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, completed: true, completedAt: result.onboarding_completed_at });
+  } catch (error) {
+    console.error('Error marking onboarding completed:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error marking onboarding completed'
+    });
+  }
+});
+
 // Record a generic UI event for a participant (called by the study frontend)
 app.post('/api/users/:participantId/events', async (req, res) => {
   try {
