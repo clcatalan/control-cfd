@@ -295,9 +295,9 @@ function App() {
     <div className="app">
       <div className="app-header">
         <div className="header-left">
-          <button className="back-button" onClick={() => setSelectedProblem(null)}>
+          {/* <button className="back-button" onClick={() => setSelectedProblem(null)}>
             &larr; Problems
-          </button>
+          </button> */}
           <span className="participant-id">Participant: {participantId}</span>
         </div>
         <div className="header-right">

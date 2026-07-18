@@ -22,11 +22,21 @@ function formatDate(date) {
   return `${year}-${month}-${day}`
 }
 
+function formatDisplayDate(dateStr) {
+  const [year, month, day] = dateStr.split('-').map(Number)
+  return new Date(year, month - 1, day).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })
+}
+
 // Bypass the daily schedule lock in local dev so every problem is testable; never true in a production build.
 const unlockAllForDev = import.meta.env.DEV
 
 function ProblemList({ participantId, onSelectProblem, onLogout, completedProblemIds = [] }) {
   const [unlockedProblemId, setUnlockedProblemId] = useState(null)
+  const [scheduleByProblemId, setScheduleByProblemId] = useState({})
   const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
   const [loadingSchedule, setLoadingSchedule] = useState(true)
 
@@ -39,6 +49,12 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
           const todayStr = formatDate(new Date())
           const todayEntry = data.schedule.find((entry) => entry.scheduled_date === todayStr)
           setUnlockedProblemId(todayEntry ? todayEntry.problem_id : null)
+
+          const scheduleMap = {}
+          data.schedule.forEach((entry) => {
+            scheduleMap[entry.problem_id] = entry.scheduled_date
+          })
+          setScheduleByProblemId(scheduleMap)
         }
       } catch (err) {
         console.error('Error fetching schedule:', err)
@@ -84,6 +100,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
               {week.problems.map((problem) => {
                 const isUnlocked = unlockAllForDev || allProblemsEnabled || problem.id === unlockedProblemId
                 const isCompleted = completedProblemIds.includes(problem.id)
+                const scheduledDate = scheduleByProblemId[problem.id]
                 return (
                   <button
                     key={problem.id}
@@ -93,6 +110,9 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
                     onClick={() => isUnlocked && !isCompleted && onSelectProblem && onSelectProblem(problem)}
                   >
                     <span className="problem-title">Problem {problem.id}</span>
+                    <span className="problem-availability">
+                      {scheduledDate ? formatDisplayDate(scheduledDate) : 'Not scheduled'}
+                    </span>
                     {isCompleted && <span className="problem-done-badge">Done</span>}
                     {!isCompleted && !isUnlocked && <span className="problem-lock-icon">🔒</span>}
                   </button>

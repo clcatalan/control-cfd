@@ -142,6 +142,17 @@
   font-weight: 600;
 }
 
+.problem-availability {
+  margin-top: 0.3rem;
+  font-size: 0.75rem;
+  color: #8a8fa3;
+  font-weight: 500;
+}
+
+.problem-card.locked .problem-availability {
+  color: #b0b4c4;
+}
+
 .no-problem-banner {
   background: #fff8e6;
   color: #8a6d3b;
