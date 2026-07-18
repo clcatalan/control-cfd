@@ -47,6 +47,7 @@ function StudyCreation() {
   const [users, setUsers] = useState([])
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [savingGroupFor, setSavingGroupFor] = useState(null)
+  const [problems, setProblems] = useState([])
 
   const fetchSettings = async () => {
     try {
@@ -127,6 +128,18 @@ function StudyCreation() {
     }
   }
 
+  const fetchProblems = async () => {
+    try {
+      const response = await fetch(`${API_URL}/problems`)
+      const data = await response.json()
+      if (data.success) {
+        setProblems(data.problems)
+      }
+    } catch (err) {
+      console.error('Error fetching problems:', err)
+    }
+  }
+
   const fetchUsers = async () => {
     setLoadingUsers(true)
     try {
@@ -176,7 +189,18 @@ function StudyCreation() {
     fetchSchedule()
     fetchSettings()
     fetchUsers()
+    fetchProblems()
   }, [])
+
+  const problemTitleById = useMemo(() => {
+    const map = {}
+    problems.forEach((problem) => {
+      map[problem.id] = problem.title.replace(/^\d+\.\s*/, '')
+    })
+    return map
+  }, [problems])
+
+  const problemLabel = (id) => (problemTitleById[id] ? `Problem ${id}: ${problemTitleById[id]}` : `Problem ${id}`)
 
   const scheduleByDate = useMemo(() => {
     const map = {}
@@ -336,7 +360,7 @@ function StudyCreation() {
               <h3>{selectedDate}</h3>
               {assignedProblemForSelectedDate && (
                 <p className="current-assignment">
-                  Currently assigned: <strong>Problem {assignedProblemForSelectedDate}</strong>
+                  Currently assigned: <strong>{problemLabel(assignedProblemForSelectedDate)}</strong>
                 </p>
               )}
               <form onSubmit={handleAssign} className="assign-form">
@@ -347,7 +371,7 @@ function StudyCreation() {
                     onChange={(e) => setSelectedProblemId(e.target.value)}
                   >
                     {PROBLEM_IDS.map((id) => (
-                      <option value={id} key={id}>Problem {id}</option>
+                      <option value={id} key={id}>{problemLabel(id)}</option>
                     ))}
                   </select>
                 </div>
@@ -380,7 +404,7 @@ function StudyCreation() {
               <ul>
                 {schedule.map((entry) => (
                   <li key={entry.problem_id}>
-                    <span>{entry.scheduled_date} &mdash; Problem {entry.problem_id}</span>
+                    <span>{entry.scheduled_date} &mdash; {problemLabel(entry.problem_id)}</span>
                     <button
                       className="delete-btn"
                       disabled={saving}

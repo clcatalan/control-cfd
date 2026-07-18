@@ -428,6 +428,11 @@ app.get('/api/users/:participantId/events', async (req, res) => {
 });
 
 // Get the full problem availability schedule
+// List all problems (id + title), for admin dropdowns
+app.get('/api/problems', (req, res) => {
+  res.json({ success: true, problems });
+});
+
 app.get('/api/schedule', async (req, res) => {
   try {
     const schedule = await db.getSchedule();
