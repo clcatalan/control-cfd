@@ -283,6 +283,7 @@ function App() {
     return (
       <ProblemList
         participantId={participantId}
+        studyGroup={userData?.studyGroup}
         onSelectProblem={handleSelectProblem}
         onLogout={handleLogout}
         completedProblemIds={completedProblemIds}

@@ -36,10 +36,12 @@ function formatDisplayDate(dateStr) {
 // Bypass the daily schedule lock in local dev so every problem is testable; never true in a production build.
 const unlockAllForDev = import.meta.env.DEV
 
-// Placeholder onboarding video; swap for a purpose-recorded one when available.
-const ONBOARDING_VIDEO_URL = 'https://www.youtube.com/watch?v=j2apG5PBBb8&t=6133s'
+const CONTROL_ONBOARDING_VIDEO_URL = 'https://youtu.be/m8j1xqnN1dw'
+const EXPERIMENTAL_ONBOARDING_VIDEO_URL = 'https://youtu.be/vLIJr4XECJA'
 
-function ProblemList({ participantId, onSelectProblem, onLogout, completedProblemIds = [] }) {
+function ProblemList({ participantId, studyGroup, onSelectProblem, onLogout, completedProblemIds = [] }) {
+  const onboardingVideoUrl =
+    studyGroup === 'experimental' ? EXPERIMENTAL_ONBOARDING_VIDEO_URL : CONTROL_ONBOARDING_VIDEO_URL
   const [unlockedProblemId, setUnlockedProblemId] = useState(null)
   const [scheduleByProblemId, setScheduleByProblemId] = useState({})
   const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
@@ -162,12 +164,12 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
           <div className="problem-grid onboarding-grid">
             <a
               className="problem-card onboarding-card"
-              href={ONBOARDING_VIDEO_URL}
+              href={onboardingVideoUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => {
                 setAwaitingOnboardingConfirm(true)
-                logEvent(participantId, 'onboarding_video_opened', {})
+                logEvent(participantId, 'onboarding_video_opened', { studyGroup: studyGroup || 'control' })
               }}
             >
               <span className="problem-title">Onboarding Instructions</span>
