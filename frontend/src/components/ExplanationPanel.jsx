@@ -41,30 +41,41 @@ function ExplanationPanel({
   onStartEditing,
   onCancelEditing,
   onSubmit,
+  onDialogOpenChange,
 }) {
   const [pendingAction, setPendingAction] = useState(null)
 
+  const openDialog = (action) => {
+    setPendingAction(action)
+    onDialogOpenChange?.(true)
+  }
+
+  const closeDialog = () => {
+    setPendingAction(null)
+    onDialogOpenChange?.(false)
+  }
+
   const confirmAccept = () => {
     console.log('Solution accepted')
-    setPendingAction(null)
+    closeDialog()
     onResolved?.(problem?.id, 'accept')
   }
 
   const confirmReject = () => {
     console.log('Solution rejected, entering edit mode')
-    setPendingAction(null)
+    closeDialog()
     onStartEditing?.()
   }
 
   const confirmSubmit = () => {
     console.log('Edited solution submitted')
-    setPendingAction(null)
+    closeDialog()
     onSubmit?.()
   }
 
   const confirmBack = () => {
     console.log('Editing cancelled, reverting to read-only')
-    setPendingAction(null)
+    closeDialog()
     onCancelEditing?.()
   }
 
@@ -121,19 +132,19 @@ function ExplanationPanel({
       <div className="explanation-footer">
         {isEditing ? (
           <>
-            <button className="btn-back" onClick={() => setPendingAction('back')} disabled={!visible || isSpeaking}>
+            <button className="btn-back" onClick={() => openDialog('back')} disabled={!visible || isSpeaking}>
               &larr; Back
             </button>
-            <button className="btn-submit" onClick={() => setPendingAction('submit')} disabled={!visible || isSpeaking}>
+            <button className="btn-submit" onClick={() => openDialog('submit')} disabled={!visible || isSpeaking}>
               Submit
             </button>
           </>
         ) : (
           <>
-            <button className="btn-reject" onClick={() => setPendingAction('reject')} disabled={!visible || isSpeaking}>
+            <button className="btn-reject" onClick={() => openDialog('reject')} disabled={!visible || isSpeaking}>
               Reject
             </button>
-            <button className="btn-accept" onClick={() => setPendingAction('accept')} disabled={!visible || isSpeaking}>
+            <button className="btn-accept" onClick={() => openDialog('accept')} disabled={!visible || isSpeaking}>
               Accept
             </button>
           </>
@@ -147,7 +158,7 @@ function ExplanationPanel({
         confirmLabel="Accept"
         variant="accept"
         onConfirm={confirmAccept}
-        onCancel={() => setPendingAction(null)}
+        onCancel={closeDialog}
       />
 
       <ConfirmDialog
@@ -157,7 +168,7 @@ function ExplanationPanel({
         confirmLabel="Proceed"
         variant="reject"
         onConfirm={confirmReject}
-        onCancel={() => setPendingAction(null)}
+        onCancel={closeDialog}
       />
 
       <ConfirmDialog
@@ -167,7 +178,7 @@ function ExplanationPanel({
         confirmLabel="Submit"
         variant="accept"
         onConfirm={confirmSubmit}
-        onCancel={() => setPendingAction(null)}
+        onCancel={closeDialog}
       />
 
       <ConfirmDialog
@@ -177,7 +188,7 @@ function ExplanationPanel({
         confirmLabel="Proceed"
         variant="reject"
         onConfirm={confirmBack}
-        onCancel={() => setPendingAction(null)}
+        onCancel={closeDialog}
       />
     </div>
   )

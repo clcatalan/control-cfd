@@ -9,7 +9,7 @@ import { logEvent, formatTimestamp } from './utils/logEvent'
 import './App.css'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
-const PROBLEM_TIME_LIMIT_SECONDS = 15 * 60
+const PROBLEM_TIME_LIMIT_SECONDS = 30 * 60
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60)
@@ -37,6 +37,9 @@ function App() {
   // already been logged, so only the very first completion is recorded.
   const wasNarrationSpeakingRef = useRef(false)
   const firstReadCompletedLoggedRef = useRef(false)
+  // Paused while an Accept/Reject/Submit/Back confirmation dialog is open, so
+  // participants aren't timed out while deciding.
+  const isTimerPausedRef = useRef(false)
 
   // Voice narration is a study treatment: only participants assigned to the
   // "experimental" group (via the admin panel) get it. Anyone else (control
@@ -200,6 +203,13 @@ function App() {
     handleSolutionResolved(selectedProblem?.id, 'reject', code)
   }
 
+  // Pausing/resuming only stops the ticking; it's driven off timeRemaining
+  // itself rather than a separate wall-clock setTimeout, so a paused dialog
+  // can't cause a timeout to fire early.
+  const handleDialogOpenChange = (isOpen) => {
+    isTimerPausedRef.current = isOpen
+  }
+
   // Give the participant 15 minutes per problem. If they haven't accepted or
   // rejected the solution by then, record a timeout and send them back to the list.
   useEffect(() => {
@@ -210,18 +220,22 @@ function App() {
       timestamp: formatTimestamp(),
     })
     setTimeRemaining(PROBLEM_TIME_LIMIT_SECONDS)
+    isTimerPausedRef.current = false
 
     const intervalId = setInterval(() => {
-      setTimeRemaining((prev) => (prev > 0 ? prev - 1 : 0))
-    }, 1000)
+      if (isTimerPausedRef.current) return
 
-    const timeoutId = setTimeout(() => {
-      handleSolutionResolved(selectedProblem.id, 'timeout')
-    }, PROBLEM_TIME_LIMIT_SECONDS * 1000)
+      setTimeRemaining((prev) => {
+        if (prev <= 1) {
+          handleSolutionResolved(selectedProblem.id, 'timeout')
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
 
     return () => {
       clearInterval(intervalId)
-      clearTimeout(timeoutId)
     }
   }, [selectedProblem])
 
@@ -351,6 +365,7 @@ function App() {
             onStartEditing={handleStartEditingSolution}
             onCancelEditing={handleCancelEditingSolution}
             onSubmit={handleSubmitEditedSolution}
+            onDialogOpenChange={handleDialogOpenChange}
           />
         </div>
       </div>

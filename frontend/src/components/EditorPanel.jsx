@@ -115,7 +115,8 @@ function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onG
             suggestOnTriggerCharacters: false,
             quickSuggestions: false,
             contextmenu: false,
-            padding: { top: 16, bottom: 16 }
+            padding: { top: 16, bottom: 16 },
+            fixedOverflowWidgets: true
           }}
         />
       </div>
