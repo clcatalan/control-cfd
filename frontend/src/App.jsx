@@ -239,6 +239,22 @@ function App() {
     }
   }, [selectedProblem])
 
+  // Refreshing or closing the tab mid-problem would lose the participant's progress
+  // and desync the timer, so warn them via the browser's native confirmation prompt.
+  // Browsers don't allow JS to block navigation outright (e.g. Ctrl+R), only to
+  // interpose this confirmation.
+  useEffect(() => {
+    if (!selectedProblem) return
+
+    const handleBeforeUnload = (e) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [selectedProblem])
+
   const handleMouseDown = (handle) => {
     setActiveHandle(handle)
   }

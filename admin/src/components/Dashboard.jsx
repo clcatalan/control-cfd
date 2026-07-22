@@ -2,6 +2,7 @@ import React from 'react'
 import { Routes, Route, NavLink } from 'react-router-dom'
 import UsersPage from './UsersPage'
 import StudyCreation from './StudyCreation'
+import StudyDetails from './StudyDetails'
 import UserDetail from './UserDetail'
 import './Dashboard.css'
 
@@ -25,6 +26,12 @@ function Dashboard({ onLogout }) {
             >
               Study Creation
             </NavLink>
+            <NavLink
+              to="/study-details"
+              className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
+            >
+              Study Details
+            </NavLink>
           </nav>
         </div>
         <div className="header-right">
@@ -35,6 +42,7 @@ function Dashboard({ onLogout }) {
       <Routes>
         <Route path="/" element={<UsersPage />} />
         <Route path="/study-creation" element={<StudyCreation />} />
+        <Route path="/study-details" element={<StudyDetails />} />
         <Route path="/users/:participantId" element={<UserDetail />} />
       </Routes>
     </div>
