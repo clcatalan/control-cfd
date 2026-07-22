@@ -92,6 +92,20 @@
   border-bottom: 1px solid #3c3c3c;
 }
 
+.test-pass-label {
+  padding: 10px 24px;
+  background-color: rgba(40, 167, 69, 0.12);
+  color: #28a745;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.test-pass-label-pending {
+  background-color: rgba(10, 132, 255, 0.12);
+  color: #0a84ff;
+}
+
 .editor-loading-overlay {
   position: absolute;
   inset: 0;

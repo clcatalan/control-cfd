@@ -6,10 +6,12 @@ import Login from './components/Login'
 import ProblemList from './components/ProblemList'
 import { useAiNarration } from './hooks/useAiNarration'
 import { logEvent, formatTimestamp } from './utils/logEvent'
+import leetcodeProblems from './data/leetcodeProblems'
 import './App.css'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 const PROBLEM_TIME_LIMIT_SECONDS = 30 * 60
+const SESSION_STORAGE_PREFIX = 'problemSession_'
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60)
@@ -17,26 +19,54 @@ const formatTime = (totalSeconds) => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`
 }
 
+// Reads the in-progress problem session (if any) for whichever participant is
+// stored in localStorage, so a page refresh can resume instead of bouncing
+// back to the problem list. Problem content is static data, not fetched, so
+// only the id needs to be persisted.
+function loadPersistedSession() {
+  const storedParticipantId = localStorage.getItem('participantId')
+  if (!storedParticipantId) return null
+  try {
+    const raw = localStorage.getItem(`${SESSION_STORAGE_PREFIX}${storedParticipantId}`)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    const problem = leetcodeProblems.find((p) => p.id === parsed.problemId)
+    if (!problem) return null
+    return { ...parsed, problem }
+  } catch {
+    return null
+  }
+}
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [participantId, setParticipantId] = useState('')
   const [userData, setUserData] = useState(null)
-  const [selectedProblem, setSelectedProblem] = useState(null)
-  const [language, setLanguage] = useState('javascript')
-  const [aiSolutionGenerated, setAiSolutionGenerated] = useState(false)
+  const [selectedProblem, setSelectedProblem] = useState(() => loadPersistedSession()?.problem ?? null)
+  const [language, setLanguage] = useState(() => loadPersistedSession()?.language ?? 'javascript')
+  const [aiSolutionGenerated, setAiSolutionGenerated] = useState(() => loadPersistedSession()?.aiSolutionGenerated ?? false)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [code, setCode] = useState(null)
-  const [originalSolution, setOriginalSolution] = useState(null)
-  const [isEditingSolution, setIsEditingSolution] = useState(false)
+  const [code, setCode] = useState(() => loadPersistedSession()?.code ?? null)
+  const [originalSolution, setOriginalSolution] = useState(() => loadPersistedSession()?.originalSolution ?? null)
+  const [isEditingSolution, setIsEditingSolution] = useState(() => loadPersistedSession()?.isEditingSolution ?? false)
   const [leftWidth, setLeftWidth] = useState(30)
   const [middleWidth, setMiddleWidth] = useState(40)
   const [activeHandle, setActiveHandle] = useState(null)
   const [completedProblemIds, setCompletedProblemIds] = useState([])
-  const [timeRemaining, setTimeRemaining] = useState(PROBLEM_TIME_LIMIT_SECONDS)
+  const [timeRemaining, setTimeRemaining] = useState(() => {
+    const session = loadPersistedSession()
+    if (!session) return PROBLEM_TIME_LIMIT_SECONDS
+    const elapsedSinceSave = (Date.now() - session.savedAt) / 1000
+    return Math.max(0, Math.round(session.timeRemaining - elapsedSinceSave))
+  })
   // Tracks whether the voice narration's first read-through (not a replay) has
   // already been logged, so only the very first completion is recorded.
   const wasNarrationSpeakingRef = useRef(false)
   const firstReadCompletedLoggedRef = useRef(false)
+  // Experimental-group only: gates the "Running tests..." label so it doesn't show
+  // until the voice narration's first read-through has finished. Stays true across
+  // replays once set, so it never has to reappear for later plays.
+  const [narrationFirstReadDone, setNarrationFirstReadDone] = useState(false)
   // Paused while an Accept/Reject/Submit/Back confirmation dialog is open, so
   // participants aren't timed out while deciding.
   const isTimerPausedRef = useRef(false)
@@ -92,6 +122,7 @@ function App() {
   }
 
   const handleLogout = () => {
+    if (participantId) localStorage.removeItem(`${SESSION_STORAGE_PREFIX}${participantId}`)
     setIsLoggedIn(false)
     setParticipantId('')
     setUserData(null)
@@ -108,8 +139,11 @@ function App() {
     setCode(null)
     setOriginalSolution(null)
     setIsEditingSolution(false)
+    setTimeRemaining(PROBLEM_TIME_LIMIT_SECONDS)
+    isTimerPausedRef.current = false
     wasNarrationSpeakingRef.current = false
     firstReadCompletedLoggedRef.current = false
+    setNarrationFirstReadDone(false)
   }
 
   const handleLanguageChange = (newLanguage) => {
@@ -131,6 +165,7 @@ function App() {
     setIsEditingSolution(false)
     wasNarrationSpeakingRef.current = false
     firstReadCompletedLoggedRef.current = false
+    setNarrationFirstReadDone(false)
 
     logEvent(participantId, 'generate_ai_solution_clicked', {
       problemId: selectedProblem?.id,
@@ -168,6 +203,7 @@ function App() {
     }
     if (wasNarrationSpeakingRef.current && !narration.isReplaying && !firstReadCompletedLoggedRef.current) {
       firstReadCompletedLoggedRef.current = true
+      setNarrationFirstReadDone(true)
       logEvent(participantId, 'voice_explanation_completed', {
         problemId: selectedProblem?.id,
         timestamp: formatTimestamp(),
@@ -177,6 +213,7 @@ function App() {
   }, [narration.isSpeaking, narration.isReplaying])
 
   const handleSolutionResolved = (problemId, response, submittedCode = null) => {
+    if (participantId) localStorage.removeItem(`${SESSION_STORAGE_PREFIX}${participantId}`)
     setCompletedProblemIds((prev) => (prev.includes(problemId) ? prev : [...prev, problemId]))
     setSelectedProblem(null)
     setIsEditingSolution(false)
@@ -210,8 +247,11 @@ function App() {
     isTimerPausedRef.current = isOpen
   }
 
-  // Give the participant 15 minutes per problem. If they haven't accepted or
+  // Give the participant 30 minutes per problem. If they haven't accepted or
   // rejected the solution by then, record a timeout and send them back to the list.
+  // Doesn't reset timeRemaining itself: handleSelectProblem sets the full limit when a
+  // problem is first opened, and the persisted-session restore above computes what's
+  // left after a refresh — resetting here would clobber either of those on mount.
   useEffect(() => {
     if (!selectedProblem) return
 
@@ -219,8 +259,6 @@ function App() {
       problemId: selectedProblem.id,
       timestamp: formatTimestamp(),
     })
-    setTimeRemaining(PROBLEM_TIME_LIMIT_SECONDS)
-    isTimerPausedRef.current = false
 
     const intervalId = setInterval(() => {
       if (isTimerPausedRef.current) return
@@ -239,21 +277,25 @@ function App() {
     }
   }, [selectedProblem])
 
-  // Refreshing or closing the tab mid-problem would lose the participant's progress
-  // and desync the timer, so warn them via the browser's native confirmation prompt.
-  // Browsers don't allow JS to block navigation outright (e.g. Ctrl+R), only to
-  // interpose this confirmation.
+  // Persist the in-progress session on every change so a page refresh can resume the
+  // same problem instead of bouncing back to the list, with the timer picking up where
+  // it left off (loadPersistedSession computes elapsed time from savedAt) instead of
+  // resetting to the full limit.
   useEffect(() => {
-    if (!selectedProblem) return
+    if (!selectedProblem || !participantId) return
 
-    const handleBeforeUnload = (e) => {
-      e.preventDefault()
-      e.returnValue = ''
+    const session = {
+      problemId: selectedProblem.id,
+      language,
+      code,
+      originalSolution,
+      aiSolutionGenerated,
+      isEditingSolution,
+      timeRemaining,
+      savedAt: Date.now(),
     }
-
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
-  }, [selectedProblem])
+    localStorage.setItem(`${SESSION_STORAGE_PREFIX}${participantId}`, JSON.stringify(session))
+  }, [selectedProblem, participantId, language, code, originalSolution, aiSolutionGenerated, isEditingSolution, timeRemaining])
 
   const handleMouseDown = (handle) => {
     setActiveHandle(handle)
@@ -359,6 +401,9 @@ function App() {
             code={code}
             onCodeChange={setCode}
             readOnly={!isEditingSolution}
+            solutionVisible={aiSolutionGenerated}
+            holdForNarration={isExperimental}
+            narrationFirstReadDone={narrationFirstReadDone}
           />
         </div>
         <div

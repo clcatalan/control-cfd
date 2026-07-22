@@ -9,11 +9,41 @@ const defaultCode = {
   cpp: ``
 }
 
-function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onGenerateComplete, activeLineRanges, code, onCodeChange, readOnly }) {
+function EditorPanel({
+  problem,
+  language,
+  onLanguageChange,
+  onGenerateStart,
+  onGenerateComplete,
+  activeLineRanges,
+  code,
+  onCodeChange,
+  readOnly,
+  solutionVisible,
+  holdForNarration,
+  narrationFirstReadDone,
+}) {
   const [isGenerating, setIsGenerating] = useState(false)
+  const [showPassedLabel, setShowPassedLabel] = useState(false)
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
   const decorationIdsRef = useRef([])
+
+  // For the experimental group, hold off entirely until the voice narration's first
+  // read-through has finished (holdForNarration + narrationFirstReadDone) — otherwise
+  // "tests passed" could show while the AI is still explaining the solution. Once the
+  // gate opens, "Running tests..." shows for 3s before flipping to "passed", same as
+  // the control group; it doesn't re-hide for later narration replays.
+  const testsGateOpen = !holdForNarration || narrationFirstReadDone
+
+  useEffect(() => {
+    if (!solutionVisible || !testsGateOpen) {
+      setShowPassedLabel(false)
+      return
+    }
+    const timerId = setTimeout(() => setShowPassedLabel(true), 3000)
+    return () => clearTimeout(timerId)
+  }, [solutionVisible, testsGateOpen])
 
   const handleEditorMount = (editor, monacoInstance) => {
     editorRef.current = editor
@@ -120,6 +150,14 @@ function EditorPanel({ problem, language, onLanguageChange, onGenerateStart, onG
           }}
         />
       </div>
+
+      {solutionVisible && testsGateOpen && (
+        showPassedLabel ? (
+          <div className="test-pass-label">The solution passed all example test cases</div>
+        ) : (
+          <div className="test-pass-label test-pass-label-pending">Running tests on the solution...</div>
+        )
+      )}
 
       {/* <div className="console-area">
         <div className="console-header">
