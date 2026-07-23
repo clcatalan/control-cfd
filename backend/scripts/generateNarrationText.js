@@ -13,7 +13,9 @@ const path = require('path')
 const vm = require('vm')
 const OpenAI = require('openai')
 
-const PROBLEMS_PATH = path.join(__dirname, '../../frontend/src/data/leetcodeProblems.js')
+// TEMPORARY: pointed at leetcodeProblems-new.js while the new problem set is
+// under review. Change back to 'leetcodeProblems.js' to revert.
+const PROBLEMS_PATH = path.join(__dirname, '../../frontend/src/data/leetcodeProblems-new.js')
 const OUTPUT_PATH = path.join(__dirname, '../../frontend/src/data/narrationText.json')
 const MODEL = 'gpt-5.4-nano'
 
@@ -40,7 +42,7 @@ function parseDetailedExplanation(text) {
 
 function loadProblems() {
   let src = fs.readFileSync(PROBLEMS_PATH, 'utf8')
-  src = src.replace('export default leetcodeProblems', 'module.exports = leetcodeProblems')
+  src = src.replace(/export default (\w+)/, 'module.exports = $1')
   const sandbox = { module: { exports: {} }, exports: {}, require }
   vm.createContext(sandbox)
   new vm.Script(src, { filename: PROBLEMS_PATH }).runInContext(sandbox)
