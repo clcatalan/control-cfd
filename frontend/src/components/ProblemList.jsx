@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import './ProblemList.css'
 import ConfirmDialog from './ConfirmDialog'
-import leetcodeProblems from '../data/leetcodeProblems'
+import leetcodeProblems from '../data/leetcodeProblems-new'
 import { logEvent } from '../utils/logEvent'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'

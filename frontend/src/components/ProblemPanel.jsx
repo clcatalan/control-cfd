@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import './ProblemPanel.css'
-import leetcodeProblems from '../data/leetcodeProblems'
+import leetcodeProblems from '../data/leetcodeProblems-new'
 
 function ProblemPanel({ problem }) {
   const [activeTab, setActiveTab] = useState('description')
@@ -32,10 +32,10 @@ function ProblemPanel({ problem }) {
         {activeTab === 'description' && (
           <>
             <div className="problem-header">
-              <h1>Problem {activeProblem.id}: {titleWithoutLeetcodeNumber}</h1>
-              <span className={`difficulty ${getDifficultyClass(activeProblem.difficulty)}`}>
+              <h1>Problem {activeProblem.id}</h1>
+              {/* <span className={`difficulty ${getDifficultyClass(activeProblem.difficulty)}`}>
                 {activeProblem.difficulty}
-              </span>
+              </span> */}
             </div>
 
             <div className="problem-description">

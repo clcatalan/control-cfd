@@ -6,7 +6,7 @@ import Login from './components/Login'
 import ProblemList from './components/ProblemList'
 import { useAiNarration } from './hooks/useAiNarration'
 import { logEvent, formatTimestamp } from './utils/logEvent'
-import leetcodeProblems from './data/leetcodeProblems'
+import leetcodeProblems from './data/leetcodeProblems-new'
 import './App.css'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
