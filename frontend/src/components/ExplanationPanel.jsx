@@ -87,18 +87,6 @@ function ExplanationPanel({
     <div className="explanation-panel">
       <div className="explanation-header">
         <h2>AI Explanation</h2>
-        {visible && narrationEnabled && (
-          <div className="narration-controls">
-            <button
-              className="narration-btn"
-              onClick={onReplay}
-              disabled={isSpeaking}
-              title="Play AI Explanation Again"
-            >
-              Play AI Explanation Again
-            </button>
-          </div>
-        )}
       </div>
 
       <div className="explanation-content">
@@ -113,7 +101,19 @@ function ExplanationPanel({
             <p className="speaking-label">AI is explaining its solution</p>
           </div>
         )}
-        {visible && (!isSpeaking || isReplaying) && (
+        {visible && narrationEnabled && (!isSpeaking || isReplaying) && (
+          <div className="explanation-replay-container">
+            <button
+              className="narration-btn narration-btn-replay"
+              onClick={onReplay}
+              disabled={isSpeaking}
+              title="Play AI Explanation Again"
+            >
+              Play AI Explanation Again
+            </button>
+          </div>
+        )}
+        {visible && !narrationEnabled && (
           <>
             <div className="explanation-section">
               <h4>Explanation</h4>
