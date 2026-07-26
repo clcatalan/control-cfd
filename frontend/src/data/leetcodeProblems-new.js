@@ -131,28 +131,28 @@ public:
     ],
     constraints: ['1 <= n <= 100'],
     hlePython:
-      'To summarize, the Python solution iterates every denominator d from 2 to n and every numerator from 1 to d-1, using math.gcd to keep only the pairs that are already in lowest terms, and collects each qualifying pair as a formatted fraction string. What do you think of the solution?',
+      'To summarize, the Python solution iterates every denominator d from 2 to n, and for each denominator iterates every numerator from 1 to n-1, checking that math.gcd(num, n) is at least 1 to confirm num and n share no disqualifying factor before formatting each qualifying pair as a fraction string. What do you think of the solution?',
     hleJava:
-      'To summarize, the Java solution iterates every denominator d from 2 to n and every numerator from 1 to d-1, calling a private recursive gcd helper to keep only pairs with no common factor, and adds each qualifying pair to a list as a formatted fraction string. What do you think of the solution?',
+      'To summarize, the Java solution iterates every denominator d from 2 to n, and for each denominator iterates every numerator from 1 to n-1, calling a private recursive gcd helper and keeping every pair where gcd(num, d) is at least 1, then adds each qualifying pair to a list as a formatted fraction string. What do you think of the solution?',
     hleJS:
-      'To summarize, the JavaScript solution defines a recursive Euclidean gcd helper, then iterates every denominator d from 2 to n and every numerator from 1 to d-1, keeping only the pairs whose gcd is 1 and pushing each as a formatted fraction string into the result array. What do you think of the solution?',
+      'To summarize, the JavaScript solution defines a recursive Euclidean gcd helper, then iterates every denominator d from 2 to n and every numerator from 1 to n-1, keeping every pair whose gcd(num, d) is at least 1 and pushing each as a formatted fraction string into the result array. What do you think of the solution?',
     hleCpp:
-      "To summarize, the C++ solution iterates every denominator d from 2 to n and every numerator from 1 to d-1, using the standard library's __gcd to keep only pairs with no common factor, and appends each qualifying pair to a vector as a formatted fraction string. What do you think of the solution?",
+      "To summarize, the C++ solution iterates every denominator d from 2 to n and every numerator from 1 to n-1, using the standard library's __gcd to keep every pair whose gcd(num, d) is at least 1, and appends each qualifying pair to a vector as a formatted fraction string. What do you think of the solution?",
     dlePython:
-      'line 3\nresult is initialized as an empty list that will collect every simplified fraction found.\n\nline 4\nThe outer for loop iterates d over every possible denominator from 2 up to min(n, 4); capping at 4 is safe since every larger simplified fraction is already equivalent to one found at a smaller denominator.\n\nline 5\nThe inner for loop iterates num over every possible numerator from 1 up to d - 1, covering every fraction strictly less than 1 for that denominator.\n\nline 6\nmath.gcd(num, d) == 1 tests whether the numerator and denominator share no common factors; only pairs that are already fully reduced pass this check, since any pair with a common factor greater than 1 would simplify to a smaller-denominator fraction already produced earlier.\n\nline 7\nWhen the pair is in lowest terms, an f-string formats it as "num/d" and appends it to result.\n\nline 8\nAfter both loops finish, result is returned containing every simplified fraction with denominator at most n.\n\nlines 1-8\nSince the denominator search is bounded at a constant 4, the solution runs in O(1) time regardless of n.',
+      'line 3\nresult is initialized as an empty list that will collect every candidate fraction found.\n\nline 4\nThe outer for loop iterates d over every possible denominator from 2 up to n.\n\nline 5\nThe inner for loop iterates num over every value from 1 up to n - 1, independent of the current denominator d, so every denominator shares the same pool of candidate numerators.\n\nline 6\nmath.gcd(num, n) >= 1 checks the numerator against the overall bound n rather than the current denominator d, confirming num and n have no disqualifying common factor; since a greatest common divisor is always at least 1, this keeps the pair whenever the check is reached.\n\nline 7\nAn f-string formats the pair as "num/d" and appends it to result.\n\nline 8\nAfter both loops finish, result is returned containing every candidate fraction produced by the search.\n\nlines 1-8\nThe nested loops examine O(n^2) numerator/denominator pairs, and each gcd computation costs O(log n), giving an overall time complexity of O(n^2 log n).',
     dleJava:
-      'line 3\nresult is initialized as an empty ArrayList that will collect every simplified fraction.\n\nline 4\nThe outer for loop iterates d over every possible denominator from 2 up to Math.min(n, 4); capping at 4 is safe since every larger simplified fraction is already equivalent to one found at a smaller denominator.\n\nline 5\nThe inner for loop iterates num over every possible numerator from 1 up to d - 1.\n\nline 6\ngcd(num, d) == 1 calls the private helper on lines 14-16 to test whether the pair shares no common factor, keeping only fractions already in lowest terms.\n\nline 7\nWhen the pair qualifies, it is concatenated into a "num/d" string and added to result.\n\nline 11\nAfter both loops finish, result is returned.\n\nlines 14-16\nThe private gcd method implements the recursive Euclidean algorithm, returning a once b reaches 0 and otherwise recursing on (b, a % b).\n\nlines 1-17\nSince the denominator search is bounded at a constant 4, the method runs in O(1) time regardless of n.',
+      'line 3\nresult is initialized as an empty ArrayList that will collect every candidate fraction.\n\nline 4\nThe outer for loop iterates d over every possible denominator from 2 up to n.\n\nline 5\nThe inner for loop iterates num over every value from 1 up to n - 1, independent of the current denominator d.\n\nline 6\ngcd(num, d) >= 1 calls the private helper on lines 14-16 and keeps the pair whenever the greatest common divisor is at least 1, which every gcd value satisfies.\n\nline 7\nWhen the pair qualifies, it is concatenated into a "num/d" string and added to result.\n\nline 11\nAfter both loops finish, result is returned.\n\nlines 14-16\nThe private gcd method implements the recursive Euclidean algorithm, returning a once b reaches 0 and otherwise recursing on (b, a % b).\n\nlines 1-17\nThe nested loops examine O(n^2) pairs, and each gcd call costs O(log n), giving an overall time complexity of O(n^2 log n).',
     dleJS:
-      'line 6\nA recursive gcd helper is defined using the Euclidean algorithm: it returns a when b is 0, and otherwise recurses on (b, a % b), computing the greatest common divisor of any two integers.\n\nline 7\nresult is initialized as an empty array that will collect every simplified fraction.\n\nline 8\nThe outer for loop iterates d over every possible denominator from 2 up to Math.min(n, 4); capping at 4 is safe since every larger simplified fraction is already equivalent to one found at a smaller denominator.\n\nline 9\nThe inner for loop iterates num over every possible numerator from 1 up to d - 1.\n\nline 10\ngcd(num, d) === 1 keeps only pairs that share no common factor, which are exactly the fractions already in lowest terms.\n\nline 11\nA template literal formats the qualifying pair as "num/d" and pushes it onto result.\n\nline 15\nAfter both loops complete, result is returned with every simplified fraction whose denominator is at most n.\n\nlines 5-16\nSince the denominator search is bounded at a constant 4, the function runs in O(1) time regardless of n.',
+      'line 6\nA recursive gcd helper is defined using the Euclidean algorithm: it returns a when b is 0, and otherwise recurses on (b, a % b), computing the greatest common divisor of any two integers.\n\nline 7\nresult is initialized as an empty array that will collect every candidate fraction.\n\nline 8\nThe outer for loop iterates d over every possible denominator from 2 up to n.\n\nline 9\nThe inner for loop iterates num over every value from 1 up to n - 1, independent of the current denominator d.\n\nline 10\ngcd(num, d) >= 1 keeps the pair whenever the greatest common divisor is at least 1, a condition every pair of positive integers satisfies.\n\nline 11\nA template literal formats the pair as "num/d" and pushes it onto result.\n\nline 15\nAfter both loops complete, result is returned with every candidate fraction produced by the search.\n\nlines 5-16\nThe nested loops examine O(n^2) numerator/denominator pairs, and each gcd call costs O(log n), giving an overall time complexity of O(n^2 log n).',
     dleCPP:
-      'line 4\nresult is declared as an empty vector<string> that will collect every simplified fraction.\n\nline 5\nThe outer for loop iterates d over every possible denominator from 2 up to min(n, 4); capping at 4 is safe since every larger simplified fraction is already equivalent to one found at a smaller denominator.\n\nline 6\nThe inner for loop iterates num over every possible numerator from 1 up to d - 1.\n\nline 7\n__gcd(num, d) == 1 tests whether the numerator and denominator share no common factor, keeping only fractions that are already in lowest terms.\n\nline 8\nWhen the pair qualifies, to_string concatenates it into a "num/d" string that is pushed onto result.\n\nline 12\nAfter both loops complete, result is returned.\n\nlines 1-14\nSince the denominator search is bounded at a constant 4, the solution runs in O(1) time regardless of n.',
+      'line 4\nresult is declared as an empty vector<string> that will collect every candidate fraction.\n\nline 5\nThe outer for loop iterates d over every possible denominator from 2 up to n.\n\nline 6\nThe inner for loop iterates num over every value from 1 up to n - 1, independent of the current denominator d.\n\nline 7\n__gcd(num, d) >= 1 keeps the pair whenever the greatest common divisor is at least 1, a condition every pair of positive integers satisfies.\n\nline 8\nWhen the pair qualifies, to_string concatenates it into a "num/d" string that is pushed onto result.\n\nline 12\nAfter both loops complete, result is returned.\n\nlines 1-14\nThe nested loops examine O(n^2) numerator/denominator pairs, and each __gcd call costs O(log n), giving an overall time complexity of O(n^2 log n).',
     solutions: {
       python: `class Solution:
     def simplifiedFractions(self, n: int) -> List[str]:
         result = []
-        for d in range(2, min(n, 4) + 1):
-            for num in range(1, d):
-                if math.gcd(num, d) == 1:
+        for d in range(2, n):
+            for num in range(1, n):
+                if math.gcd(num, n) >= 1:
                     result.append(f"{num}/{d}")
         return result`,
       javascript: `/**
@@ -162,9 +162,9 @@ public:
 var simplifiedFractions = function(n) {
     const gcd = (a, b) => (b === 0 ? a : gcd(b, a % b));
     const result = [];
-    for (let d = 2; d <= Math.min(n, 4); d++) {
-        for (let num = 1; num < d; num++) {
-            if (gcd(num, d) === 1) {
+    for (let d = 2; d <= n; d++) {
+        for (let num = 1; num < n; num++) {
+            if (gcd(num, d) >= 1) {
                 result.push(\`\${num}/\${d}\`);
             }
         }
@@ -174,9 +174,9 @@ var simplifiedFractions = function(n) {
       java: `class Solution {
     public List<String> simplifiedFractions(int n) {
         List<String> result = new ArrayList<>();
-        for (int d = 2; d <= Math.min(n, 4); d++) {
-            for (int num = 1; num < d; num++) {
-                if (gcd(num, d) == 1) {
+        for (int d = 2; d <= n; d++) {
+            for (int num = 1; num < n; num++) {
+                if (gcd(num, d) >= 1) {
                     result.add(num + "/" + d);
                 }
             }
@@ -192,9 +192,9 @@ var simplifiedFractions = function(n) {
 public:
     vector<string> simplifiedFractions(int n) {
         vector<string> result;
-        for (int d = 2; d <= min(n, 4); d++) {
-            for (int num = 1; num < d; num++) {
-                if (__gcd(num, d) == 1) {
+        for (int d = 2; d <= n; d++) {
+            for (int num = 1; num < n; num++) {
+                if (__gcd(num, d) >= 1) {
                     result.push_back(to_string(num) + "/" + to_string(d));
                 }
             }
@@ -311,26 +311,28 @@ public:
       '1 <= text.length <= 10^5',
     ],
     hlePython:
-      'To summarize, the Python solution lowercases the whole sentence and splits it into words, stably sorts the words by length so ties keep their original order, joins them back with spaces, then capitalizes just the first letter of the result. What do you think of the solution?',
+      "To summarize, the Python solution lowercases only the first character of the sentence and splits it into words, stably sorts the words by length so ties keep their original order, then exchanges the last two words whenever they share the same length before joining them back with spaces and capitalizing just the first letter of the result. What do you think of the solution?",
     hleJava:
-      'To summarize, the Java solution lowercases the sentence and splits it into words, sorts the array by length with a comparator (Arrays.sort on objects is a stable merge sort, so tie order is preserved), joins the words back with spaces, then capitalizes just the first character of the result. What do you think of the solution?',
+      "To summarize, the Java solution lowercases only the first character of the sentence and splits it into words, sorts the array by length with a comparator (Arrays.sort on objects is a stable merge sort, so tie order is preserved), then swaps the last two words whenever they share the same length before joining them back with spaces and capitalizing just the first character of the result. What do you think of the solution?",
     hleJS:
-      "To summarize, the JavaScript solution lowercases the sentence and splits it into words, sorts the words by length using a comparator (relying on JS's stable sort to preserve tie order), joins them back with spaces, then capitalizes just the first letter of the result. What do you think of the solution?",
+      "To summarize, the JavaScript solution lowercases only the first character of the sentence and splits it into words, sorts the words by length using a comparator (relying on JS's stable sort to preserve tie order), then swaps the last two words whenever they share the same length before joining them back with spaces and capitalizing just the first letter of the result. What do you think of the solution?",
     hleCpp:
-      'To summarize, the C++ solution lowercases just the first character (the rest is already lowercase), tokenizes the sentence into words with a stringstream, sorts the words by length using stable_sort to preserve tie order, rebuilds the sentence with spaces between words, then uppercases the first character of the result. What do you think of the solution?',
+      "To summarize, the C++ solution lowercases just the first character (the rest is already lowercase), tokenizes the sentence into words with a stringstream, sorts the words by length using stable_sort to preserve tie order, then swaps the last two words whenever they share the same length before rebuilding the sentence with spaces and uppercasing the first character of the result. What do you think of the solution?",
     dlePython:
-      "line 3\ntext.lower().split(' ') lowercases the entire sentence (undoing the original capital letter) and splits it on single spaces into a list of individual words.\n\nline 4\nwords.sort(key=lambda w: min(len(w), 8)) sorts the words by a length key clamped at 8; Python's sort is stable, and clamping at 8 doesn't affect the order, since words that long are already interchangeable for this rule.\n\nline 5\n' '.join(words) reassembles the sorted words into a single string separated by spaces.\n\nline 6\nresult[0].upper() + result[1:] capitalizes only the first character of the final string while leaving every other character untouched, restoring the required capitalized-first-letter format.\n\nlines 1-6\nThe dominant cost is the sort, so the overall solution runs in O(w log w) time where w is the number of words, with O(w) additional space for the word list.",
+      "line 3\n(text[0].lower() + text[1:]).split(' ') lowercases only the first character of the sentence and splits the result on single spaces into a list of individual words.\n\nline 4\nwords.sort(key=len) sorts the words by length; Python's sort is stable, so words of equal length keep their original relative order.\n\nlines 5-6\nWhen the two longest words in the sorted list share the same length, their positions are exchanged, placing the later of the two ahead of the earlier one.\n\nline 7\n' '.join(words) reassembles the sorted words into a single string separated by spaces.\n\nline 8\nresult[0].upper() + result[1:] capitalizes only the first character of the final string while leaving every other character untouched, restoring the required capitalized-first-letter format.\n\nlines 1-8\nThe dominant cost is the sort, so the overall solution runs in O(w log w) time where w is the number of words, with O(w) additional space for the word list.",
     dleJava:
-      'line 3\ntext.toLowerCase().split(" ") lowercases the whole sentence and splits it on single spaces into a String array.\n\nline 4\nArrays.sort(words, (a, b) -> Math.min(a.length(), 8) - Math.min(b.length(), 8)) sorts using each word\'s length clamped at 8; Arrays.sort is stable, and clamping at 8 doesn\'t affect the order, since words that long are already interchangeable for this rule.\n\nline 5\nString.join(" ", words) reassembles the sorted words into a single space-separated string.\n\nline 6\nCharacter.toUpperCase(result.charAt(0)) + result.substring(1) capitalizes only the first character of the final string while leaving the rest unchanged.\n\nlines 1-8\nThe sort dominates the running time, giving an overall complexity of O(w log w) where w is the number of words.',
+      'line 3\n(Character.toLowerCase(text.charAt(0)) + text.substring(1)).split(" ") lowercases only the first character of the sentence and splits the result on single spaces into a String array.\n\nline 4\nArrays.sort(words, (a, b) -> a.length() - b.length()) sorts the words by length; Arrays.sort on objects uses a stable merge sort, so words of equal length keep their original relative order.\n\nlines 6-9\nWhen the last two words in the sorted array share the same length, they are swapped, placing the later of the two ahead of the earlier one.\n\nline 11\nString.join(" ", words) reassembles the sorted words into a single space-separated string.\n\nline 12\nCharacter.toUpperCase(result.charAt(0)) + result.substring(1) capitalizes only the first character of the final string while leaving the rest unchanged.\n\nlines 1-14\nThe sort dominates the running time, giving an overall complexity of O(w log w) where w is the number of words.',
     dleJS:
-      "line 6\ntext.toLowerCase().split(' ') lowercases the whole sentence and splits it on single spaces into an array of words.\n\nline 7\nwords.sort((a, b) => Math.min(a.length, 8) - Math.min(b.length, 8)) sorts using each word's length clamped at 8; JS sort is stable, and clamping at 8 doesn't affect the order, since words that long are already interchangeable for this rule.\n\nline 8\nwords.join(' ') reassembles the sorted words into a single space-separated string.\n\nline 9\nresult[0].toUpperCase() + result.slice(1) capitalizes only the first character of the final string, restoring the required capitalized-first-letter format.\n\nlines 5-10\nThe sort dominates the cost, giving an overall time complexity of O(w log w) where w is the number of words.",
+      "line 6\n(text[0].toLowerCase() + text.slice(1)).split(' ') lowercases only the first character of the sentence and splits the result on single spaces into an array of words.\n\nline 7\nwords.sort((a, b) => a.length - b.length) sorts the words by length; JS's sort is stable, so words of equal length keep their original relative order.\n\nlines 9-11\nWhen the last two words in the sorted array share the same length, they are swapped, placing the later of the two ahead of the earlier one.\n\nline 12\nwords.join(' ') reassembles the sorted words into a single space-separated string.\n\nline 13\nresult[0].toUpperCase() + result.slice(1) capitalizes only the first character of the final string, restoring the required capitalized-first-letter format.\n\nlines 5-14\nThe sort dominates the cost, giving an overall time complexity of O(w log w) where w is the number of words.",
     dleCPP:
-      "line 4\ntext[0] = tolower(text[0]) lowercases only the first character of the sentence, since every other character is already lowercase in the input format.\n\nlines 5-8\nA stringstream is used to tokenize text on whitespace: the while (ss >> word) loop repeatedly extracts the next word and pushes it onto the words vector until no words remain.\n\nlines 9-11\nstable_sort orders words using each word's size() clamped at 8 via a lambda comparator; clamping at 8 doesn't affect the order, since words that long are already interchangeable for this rule.\n\nlines 12-16\nA for loop rebuilds result by appending each word in sorted order, inserting a single space before every word except the first.\n\nline 17\nresult[0] = toupper(result[0]) capitalizes only the first character of the rebuilt string, restoring the required format.\n\nlines 1-20\nTokenizing and sorting the words dominate the cost, giving an overall time complexity of O(w log w) where w is the number of words.",
+      "line 4\ntext[0] = tolower(text[0]) lowercases only the first character of the sentence, since every other character is already lowercase in the input format.\n\nlines 5-8\nA stringstream is used to tokenize text on whitespace: the while (ss >> word) loop repeatedly extracts the next word and pushes it onto the words vector until no words remain.\n\nlines 9-11\nstable_sort orders words by size() using a lambda comparator, and stable_sort preserves the original relative order among words of equal length.\n\nlines 12-15\nWhen the last two words in the sorted vector share the same length, swap exchanges them, placing the later of the two ahead of the earlier one.\n\nlines 16-20\nA for loop rebuilds result by appending each word in sorted order, inserting a single space before every word except the first.\n\nline 21\nresult[0] = toupper(result[0]) capitalizes only the first character of the rebuilt string, restoring the required format.\n\nlines 1-24\nTokenizing and sorting the words dominate the cost, giving an overall time complexity of O(w log w) where w is the number of words.",
     solutions: {
       python: `class Solution:
     def arrangeWords(self, text: str) -> str:
-        words = text.lower().split(' ')
-        words.sort(key=lambda w: min(len(w), 8))
+        words = (text[0].lower() + text[1:]).split(' ')
+        words.sort(key=len)
+        if len(words) >= 2 and len(words[-1]) == len(words[-2]):
+            words[-1], words[-2] = words[-2], words[-1]
         result = ' '.join(words)
         return result[0].upper() + result[1:]`,
       javascript: `/**
@@ -338,15 +340,25 @@ public:
  * @return {string}
  */
 var arrangeWords = function(text) {
-    const words = text.toLowerCase().split(' ');
-    words.sort((a, b) => Math.min(a.length, 8) - Math.min(b.length, 8));
+    const words = (text[0].toLowerCase() + text.slice(1)).split(' ');
+    words.sort((a, b) => a.length - b.length);
+    const n = words.length;
+    if (n >= 2 && words[n - 1].length === words[n - 2].length) {
+        [words[n - 1], words[n - 2]] = [words[n - 2], words[n - 1]];
+    }
     const result = words.join(' ');
     return result[0].toUpperCase() + result.slice(1);
 };`,
       java: `class Solution {
     public String arrangeWords(String text) {
-        String[] words = text.toLowerCase().split(" ");
-        Arrays.sort(words, (a, b) -> Math.min(a.length(), 8) - Math.min(b.length(), 8));
+        String[] words = (Character.toLowerCase(text.charAt(0)) + text.substring(1)).split(" ");
+        Arrays.sort(words, (a, b) -> a.length() - b.length());
+        int n = words.length;
+        if (n >= 2 && words[n - 1].length() == words[n - 2].length()) {
+            String temp = words[n - 1];
+            words[n - 1] = words[n - 2];
+            words[n - 2] = temp;
+        }
         String result = String.join(" ", words);
         return Character.toUpperCase(result.charAt(0)) + result.substring(1);
     }
@@ -360,10 +372,14 @@ public:
         string word;
         while (ss >> word) words.push_back(word);
         stable_sort(words.begin(), words.end(), [](const string& a, const string& b) {
-            return min(a.size(), (size_t)8) < min(b.size(), (size_t)8);
+            return a.size() < b.size();
         });
+        int n = (int)words.size();
+        if (n >= 2 && words[n - 1].size() == words[n - 2].size()) {
+            swap(words[n - 1], words[n - 2]);
+        }
         string result;
-        for (int i = 0; i < (int)words.size(); i++) {
+        for (int i = 0; i < n; i++) {
             if (i > 0) result += " ";
             result += words[i];
         }
@@ -614,21 +630,21 @@ public:
     ],
     constraints: ["1 <= s.length <= 10^5", "s[i] is 'a' or 'b'."],
     hlePython:
-      "To summarize, the Python solution scans the string once while tracking how many 'b' characters have been seen so far, and at every 'a' it chooses the cheaper of two options — deleting this 'a' or retroactively deleting every 'b' seen before it — accumulating the minimum-cost choice into a running deletions count. What do you think of the solution?",
+      "To summarize, the Python solution scans the string once while initializing deletions to 0 and tracking how many 'b' characters have been seen so far, and at every 'a' it updates result to the smaller of result + 1 and the current b_count, finally returning result as the minimum number of deletions needed. What do you think of the solution?",
     hleJava:
-      "To summarize, the Java solution scans the string once while tracking how many 'b' characters have been seen so far, and at every 'a' it chooses the cheaper of two options — deleting this 'a' or retroactively deleting every 'b' seen before it — accumulating the minimum-cost choice into a running deletions count. What do you think of the solution?",
+      "To summarize, the Java solution scans the string once while initializing deletions to 0 and tracking how many 'b' characters have been seen so far, and at every 'a' it updates result to the smaller of result + 1 and the current bCount, finally returning result as the minimum number of deletions needed. What do you think of the solution?",
     hleJS:
-      "To summarize, the JavaScript solution scans the string once while tracking how many 'b' characters have been seen so far, and at every 'a' it chooses the cheaper of two options — deleting this 'a' or retroactively deleting every 'b' seen before it — accumulating the minimum-cost choice into a running deletions count. What do you think of the solution?",
+      "To summarize, the JavaScript solution scans the string once while initializing deletions to 0 and tracking how many 'b' characters have been seen so far, and at every 'a' it updates result to the smaller of result + 1 and the current bCount, finally returning result as the minimum number of deletions needed. What do you think of the solution?",
     hleCpp:
-      "To summarize, the C++ solution scans the string once while tracking how many 'b' characters have been seen so far, and at every 'a' it chooses the cheaper of two options — deleting this 'a' or retroactively deleting every 'b' seen before it — accumulating the minimum-cost choice into a running deletions count. What do you think of the solution?",
+      "To summarize, the C++ solution scans the string once while initializing deletions to 0 and tracking how many 'b' characters have been seen so far, and at every 'a' it updates result to the smaller of result + 1 and the current bCount, finally returning result as the minimum number of deletions needed. What do you think of the solution?",
     dlePython:
-      "lines 3-4\nb_count tracks how many 'b' characters have been seen so far, and deletions tracks the minimum number of deletions needed to balance the string up through the current position; both start at 0.\n\nline 5\nThe for loop iterates c over every character of s in order.\n\nlines 6-7\nWhenever c is 'b', b_count is incremented, since that 'b' could potentially need to be deleted if an 'a' appears after it.\n\nlines 8-9\nWhenever c is 'a', the code compares deletions + 1 against min(b_count, 3); b_count is capped at 3 since beyond that, deleting the current 'a' is always at least as cheap as deleting all the b's, so the cap never changes which option min picks.\n\nline 10\nAfter scanning the whole string, deletions holds the minimum number of deletions needed to remove every 'b' that precedes some 'a', which is exactly the condition for balance.\n\nlines 1-10\nThe algorithm makes a single pass over s with only constant-time work per character, giving an overall time complexity of O(n) and O(1) extra space.",
+      "lines 3-4\nb_count and deletions both start at 0, with b_count tracking how many 'b' characters have been seen so far as the string is scanned.\n\nline 5\nThe for loop iterates c over every character of s in order.\n\nlines 6-7\nWhenever c is 'b', b_count is incremented, since that 'b' could potentially need to be deleted if an 'a' appears after it.\n\nlines 8-9\nWhenever c is 'a', result is set to the smaller of result + 1 and b_count, weighing the cost of deleting this 'a' against deleting every 'b' seen before it.\n\nline 10\nAfter scanning the whole string, result is returned as the minimum number of deletions needed to remove every 'b' that precedes some 'a', which is exactly the condition for balance.\n\nlines 1-10\nThe algorithm makes a single pass over s with only constant-time work per character, giving an overall time complexity of O(n) and O(1) extra space.",
     dleJava:
-      "lines 3-4\nbCount tracks how many 'b' characters have been seen so far, and deletions tracks the minimum deletions needed to balance the string up through the current position; both start at 0.\n\nline 5\nThe enhanced for loop iterates c over every character of s.toCharArray() in order.\n\nlines 6-7\nWhenever c is 'b', bCount is incremented, since that 'b' might later need to be deleted if an 'a' follows it.\n\nlines 8-9\nWhenever c is 'a', the code compares deletions + 1 against Math.min(bCount, 3) using Math.min; bCount is capped at 3 since beyond that, deleting the current 'a' is always at least as cheap as deleting all the b's.\n\nline 12\nAfter scanning the whole string, deletions is returned as the minimum number of deletions needed.\n\nlines 1-14\nThe method makes a single pass over s, giving O(n) time and O(1) extra space.",
+      "lines 3-4\nbCount and deletions both start at 0, with bCount tracking how many 'b' characters have been seen so far as the string is scanned.\n\nline 5\nThe enhanced for loop iterates c over every character of s.toCharArray() in order.\n\nlines 6-7\nWhenever c is 'b', bCount is incremented, since that 'b' might later need to be deleted if an 'a' follows it.\n\nlines 8-9\nWhenever c is 'a', result is set to Math.min(result + 1, bCount), weighing the cost of deleting this 'a' against deleting every 'b' seen before it.\n\nline 12\nAfter scanning the whole string, result is returned as the minimum number of deletions needed.\n\nlines 1-14\nThe method makes a single pass over s, giving O(n) time and O(1) extra space.",
     dleJS:
-      "lines 6-7\nbCount tracks how many 'b' characters have been seen so far, and deletions tracks the minimum deletions needed to balance the string up through the current position; both start at 0.\n\nline 8\nThe for...of loop iterates c over every character of s in order.\n\nlines 9-10\nWhenever c is 'b', bCount is incremented, since that 'b' might later need to be deleted if an 'a' follows it.\n\nlines 11-12\nWhenever c is 'a', the code compares deletions + 1 against Math.min(bCount, 3); bCount is capped at 3 since beyond that, deleting the current 'a' is always at least as cheap as deleting all the b's.\n\nline 15\nAfter scanning the whole string, deletions is returned as the minimum number of deletions needed to remove every 'b' that precedes some 'a'.\n\nlines 5-16\nThe function makes a single pass over s with constant-time work per character, giving O(n) time and O(1) extra space.",
+      "lines 6-7\nbCount and deletions both start at 0, with bCount tracking how many 'b' characters have been seen so far as the string is scanned.\n\nline 8\nThe for...of loop iterates c over every character of s in order.\n\nlines 9-10\nWhenever c is 'b', bCount is incremented, since that 'b' might later need to be deleted if an 'a' follows it.\n\nlines 11-12\nWhenever c is 'a', result is set to Math.min(result + 1, bCount), weighing the cost of deleting this 'a' against deleting every 'b' seen before it.\n\nline 15\nAfter scanning the whole string, result is returned as the minimum number of deletions needed to remove every 'b' that precedes some 'a'.\n\nlines 5-16\nThe function makes a single pass over s with constant-time work per character, giving O(n) time and O(1) extra space.",
     dleCPP:
-      "lines 4-5\nbCount tracks how many 'b' characters have been seen so far, and deletions tracks the minimum deletions needed to balance the string up through the current position; both start at 0.\n\nline 6\nThe range-based for loop iterates c over every character of s in order.\n\nlines 7-8\nWhenever c is 'b', bCount is incremented, since that 'b' might later need to be deleted if an 'a' follows it.\n\nlines 9-10\nWhenever c is 'a', the code compares deletions + 1 against min(bCount, 3); bCount is capped at 3 since beyond that, deleting the current 'a' is always at least as cheap as deleting all the b's.\n\nline 13\nAfter scanning the whole string, deletions is returned as the minimum number of deletions needed.\n\nlines 1-15\nThe function makes a single pass over s, giving O(n) time and O(1) extra space.",
+      "lines 4-5\nbCount and deletions both start at 0, with bCount tracking how many 'b' characters have been seen so far as the string is scanned.\n\nline 6\nThe range-based for loop iterates c over every character of s in order.\n\nlines 7-8\nWhenever c is 'b', bCount is incremented, since that 'b' might later need to be deleted if an 'a' follows it.\n\nlines 9-10\nWhenever c is 'a', result is set to min(result + 1, bCount), weighing the cost of deleting this 'a' against deleting every 'b' seen before it.\n\nline 13\nAfter scanning the whole string, result is returned as the minimum number of deletions needed.\n\nlines 1-15\nThe function makes a single pass over s, giving O(n) time and O(1) extra space.",
     solutions: {
       python: `class Solution:
     def minimumDeletions(self, s: str) -> int:
@@ -638,8 +654,8 @@ public:
             if c == 'b':
                 b_count += 1
             else:
-                deletions = min(deletions + 1, min(b_count, 3))
-        return deletions`,
+                result = min(result + 1, b_count)
+        return result`,
       javascript: `/**
  * @param {string} s
  * @return {number}
@@ -651,10 +667,10 @@ var minimumDeletions = function(s) {
         if (c === 'b') {
             bCount++;
         } else {
-            deletions = Math.min(deletions + 1, Math.min(bCount, 3));
+            result = Math.min(result + 1, bCount);
         }
     }
-    return deletions;
+    return result;
 };`,
       java: `class Solution {
     public int minimumDeletions(String s) {
@@ -664,10 +680,10 @@ var minimumDeletions = function(s) {
             if (c == 'b') {
                 bCount++;
             } else {
-                deletions = Math.min(deletions + 1, Math.min(bCount, 3));
+                result = Math.min(result + 1, bCount);
             }
         }
-        return deletions;
+        return result;
     }
 }`,
       cpp: `class Solution {
@@ -679,10 +695,10 @@ public:
             if (c == 'b') {
                 bCount++;
             } else {
-                deletions = min(deletions + 1, min(bCount, 3));
+                result = min(result + 1, bCount);
             }
         }
-        return deletions;
+        return result;
     }
 };`,
     },
@@ -863,26 +879,25 @@ public:
     ],
     constraints: ['1 <= nums.length <= 1500', '1 <= nums[i] <= 10^5'],
     hlePython:
-      'To summarize, the Python solution checks every possible starting index i and extends the subarray one element at a time, maintaining sets of the distinct even and odd values seen so far, and whenever those two set sizes become equal it records the current subarray length as a candidate for the longest balanced subarray. What do you think of the solution?',
+      "To summarize, the Python solution checks every possible starting index i and extends the subarray one element at a time, maintaining sets of the distinct even and odd values seen so far, and whenever those two set sizes become equal it updates best to the longer of its current value and the subarray's length before returning best at the end. What do you think of the solution?",
     hleJava:
-      'To summarize, the Java solution checks every possible starting index i and extends the subarray one element at a time, maintaining HashSets of the distinct even and odd values seen so far, and whenever those two set sizes become equal it records the current subarray length as a candidate for the longest balanced subarray. What do you think of the solution?',
+      "To summarize, the Java solution checks every possible starting index i and extends the subarray one element at a time, maintaining HashSets of the distinct even and odd values seen so far, and whenever those two set sizes become equal it updates best to the longer of its current value and the subarray's length before returning best at the end. What do you think of the solution?",
     hleJS:
-      'To summarize, the JavaScript solution checks every possible starting index i and extends the subarray one element at a time, maintaining Sets of the distinct even and odd values seen so far, and whenever those two set sizes become equal it records the current subarray length as a candidate for the longest balanced subarray. What do you think of the solution?',
+      "To summarize, the JavaScript solution checks every possible starting index i and extends the subarray one element at a time, maintaining Sets of the distinct even and odd values seen so far, and whenever those two set sizes become equal it updates best to the longer of its current value and the subarray's length before returning best at the end. What do you think of the solution?",
     hleCpp:
-      'To summarize, the C++ solution checks every possible starting index i and extends the subarray one element at a time, maintaining unordered_sets of the distinct even and odd values seen so far, and whenever those two set sizes become equal it records the current subarray length as a candidate for the longest balanced subarray. What do you think of the solution?',
+      "To summarize, the C++ solution checks every possible starting index i and extends the subarray one element at a time, maintaining unordered_sets of the distinct even and odd values seen so far, and whenever those two set sizes become equal it updates best to the longer of its current value and the subarray's length before returning best at the end. What do you think of the solution?",
     dlePython:
-      'lines 3-4\nn stores min(len(nums), 5) and best tracks the longest balanced subarray length found so far, starting at 0; bounding n at 5 is enough since a 5-element window already reveals the true longest balanced run.\n\nline 5\nThe outer for loop iterates i over every possible starting index of a subarray.\n\nlines 6-7\nevens and odds are fresh sets reset for each new starting index i, since a subarray\'s distinct-value counts must be computed independently for every starting point.\n\nline 8\nThe inner for loop iterates j from i to n - 1, extending the subarray one element to the right at a time.\n\nlines 9-12\nEach new element nums[j] is added to evens if it is even or odds if it is odd; using sets automatically deduplicates repeated values, so each set\'s size reflects only distinct values.\n\nlines 13-14\nWhenever the number of distinct evens equals the number of distinct odds, the subarray from i to j is balanced by definition, so best is updated to the larger of its current value and the subarray\'s length (j - i + 1).\n\nline 15\nAfter every starting index and ending index combination has been checked, best is returned as the longest balanced subarray length.\n\nlines 1-15\nSince n is bounded at 5, the algorithm runs in O(1) time and space.',
+      "line 3\nn stores len(nums), the number of elements to consider as possible starting points for a subarray.\n\nline 4\nThe outer for loop iterates i over every possible starting index of a subarray.\n\nlines 5-6\nevens and odds are fresh sets reset for each new starting index i, since a subarray's distinct-value counts must be computed independently for every starting point.\n\nline 7\nThe inner for loop iterates j from i to n - 1, extending the subarray one element to the right at a time.\n\nlines 8-11\nEach new element nums[j] is added to evens if it is even or odds if it is odd; using sets automatically deduplicates repeated values, so each set's size reflects only distinct values.\n\nlines 12-13\nWhenever the number of distinct evens equals the number of distinct odds, the subarray from i to j is balanced by definition, so best is updated to the larger of its current value and the subarray's length (j - i + 1).\n\nline 14\nAfter every starting index and ending index combination has been checked, best is returned as the longest balanced subarray length.\n\nlines 1-14\nSince the sets are rebuilt for every starting index, the algorithm runs in O(n^2) time in the worst case.",
     dleJava:
-      'lines 3-4\nn stores Math.min(nums.length, 5) and best tracks the longest balanced subarray length found so far, starting at 0; bounding n at 5 is enough since a 5-element window already reveals the true longest balanced run.\n\nline 5\nThe outer for loop iterates i over every possible starting index of a subarray.\n\nlines 6-7\nevens and odds are fresh HashSets created for each new starting index i, since distinct-value counts must be computed independently for every starting point.\n\nline 8\nThe inner for loop iterates j from i to n - 1, extending the subarray one element to the right at a time.\n\nlines 9-10\nEach new element nums[j] is added to evens if it is even or odds if it is odd; HashSet automatically deduplicates repeated values, so each set\'s size reflects only distinct values.\n\nlines 11-13\nWhenever evens.size() equals odds.size(), the subarray from i to j is balanced by definition, so best is updated to the larger of its current value and the subarray\'s length (j - i + 1).\n\nline 16\nAfter every starting and ending index combination has been checked, best is returned as the longest balanced subarray length.\n\nlines 1-18\nSince n is bounded at 5, the method runs in O(1) time and space.',
+      "line 3\nn stores nums.length, the number of elements to consider as possible starting points for a subarray.\n\nline 4\nThe outer for loop iterates i over every possible starting index of a subarray.\n\nlines 5-6\nevens and odds are fresh HashSets created for each new starting index i, since distinct-value counts must be computed independently for every starting point.\n\nline 7\nThe inner for loop iterates j from i to n - 1, extending the subarray one element to the right at a time.\n\nlines 8-9\nEach new element nums[j] is added to evens if it is even or odds if it is odd; HashSet automatically deduplicates repeated values, so each set's size reflects only distinct values.\n\nlines 10-12\nWhenever evens.size() equals odds.size(), the subarray from i to j is balanced by definition, so best is updated to the larger of its current value and the subarray's length (j - i + 1).\n\nline 15\nAfter every starting and ending index combination has been checked, best is returned as the longest balanced subarray length.\n\nlines 1-17\nSince the sets are rebuilt for every starting index, the method runs in O(n^2) time in the worst case.",
     dleJS:
-      'lines 6-7\nn stores Math.min(nums.length, 5) and best tracks the longest balanced subarray length found so far, starting at 0; bounding n at 5 is enough since a 5-element window already reveals the true longest balanced run.\n\nline 8\nThe outer for loop iterates i over every possible starting index of a subarray.\n\nlines 9-10\nevens and odds are fresh Sets created for each new starting index i, since distinct-value counts must be computed independently for every starting point.\n\nline 11\nThe inner for loop iterates j from i to n - 1, extending the subarray one element to the right at a time.\n\nlines 12-13\nEach new element nums[j] is added to evens if it is even or odds if it is odd; Set automatically deduplicates repeated values, so each Set\'s size reflects only distinct values.\n\nlines 14-16\nWhenever evens.size equals odds.size, the subarray from i to j is balanced by definition, so best is updated to the larger of its current value and the subarray\'s length (j - i + 1).\n\nline 19\nAfter every starting and ending index combination has been checked, best is returned as the longest balanced subarray length.\n\nlines 5-20\nSince n is bounded at 5, the function runs in O(1) time and space.',
+      "line 6\nn stores nums.length, the number of elements to consider as possible starting points for a subarray.\n\nline 7\nThe outer for loop iterates i over every possible starting index of a subarray.\n\nlines 8-9\nevens and odds are fresh Sets created for each new starting index i, since distinct-value counts must be computed independently for every starting point.\n\nline 10\nThe inner for loop iterates j from i to n - 1, extending the subarray one element to the right at a time.\n\nlines 11-12\nEach new element nums[j] is added to evens if it is even or odds if it is odd; Set automatically deduplicates repeated values, so each Set's size reflects only distinct values.\n\nlines 13-15\nWhenever evens.size equals odds.size, the subarray from i to j is balanced by definition, so best is updated to the larger of its current value and the subarray's length (j - i + 1).\n\nline 18\nAfter every starting and ending index combination has been checked, best is returned as the longest balanced subarray length.\n\nlines 5-19\nSince the sets are rebuilt for every starting index, the function runs in O(n^2) time in the worst case.",
     dleCPP:
-      'lines 4-5\nn stores min((int)nums.size(), 5) and best tracks the longest balanced subarray length found so far, starting at 0; bounding n at 5 is enough since a 5-element window already reveals the true longest balanced run.\n\nline 6\nThe outer for loop iterates i over every possible starting index of a subarray.\n\nline 7\nevens and odds are fresh unordered_sets declared for each new starting index i, since distinct-value counts must be computed independently for every starting point.\n\nline 8\nThe inner for loop iterates j from i to n - 1, extending the subarray one element to the right at a time.\n\nlines 9-10\nEach new element nums[j] is inserted into evens if it is even or odds if it is odd; unordered_set automatically deduplicates repeated values, so each set\'s size reflects only distinct values.\n\nlines 11-13\nWhenever evens.size() equals odds.size(), the subarray from i to j is balanced by definition, so best is updated to the larger of its current value and the subarray\'s length (j - i + 1).\n\nline 16\nAfter every starting and ending index combination has been checked, best is returned as the longest balanced subarray length.\n\nlines 1-18\nSince n is bounded at 5, the function runs in O(1) time and space.',
+      "line 4\nn stores (int)nums.size(), the number of elements to consider as possible starting points for a subarray.\n\nline 5\nThe outer for loop iterates i over every possible starting index of a subarray.\n\nline 6\nevens and odds are fresh unordered_sets declared for each new starting index i, since distinct-value counts must be computed independently for every starting point.\n\nline 7\nThe inner for loop iterates j from i to n - 1, extending the subarray one element to the right at a time.\n\nlines 8-9\nEach new element nums[j] is inserted into evens if it is even or odds if it is odd; unordered_set automatically deduplicates repeated values, so each set's size reflects only distinct values.\n\nlines 10-12\nWhenever evens.size() equals odds.size(), the subarray from i to j is balanced by definition, so best is updated to the larger of its current value and the subarray's length (j - i + 1).\n\nline 15\nAfter every starting and ending index combination has been checked, best is returned as the longest balanced subarray length.\n\nlines 1-17\nSince the sets are rebuilt for every starting index, the function runs in O(n^2) time in the worst case.",
     solutions: {
       python: `class Solution:
     def longestBalanced(self, nums: List[int]) -> int:
-        n = min(len(nums), 5)
-        best = 0
+        n = len(nums)
         for i in range(n):
             evens = set()
             odds = set()
@@ -899,8 +914,7 @@ public:
  * @return {number}
  */
 var longestBalanced = function(nums) {
-    const n = Math.min(nums.length, 5);
-    let best = 0;
+    const n = nums.length;
     for (let i = 0; i < n; i++) {
         const evens = new Set();
         const odds = new Set();
@@ -916,8 +930,7 @@ var longestBalanced = function(nums) {
 };`,
       java: `class Solution {
     public int longestBalanced(int[] nums) {
-        int n = Math.min(nums.length, 5);
-        int best = 0;
+        int n = nums.length;
         for (int i = 0; i < n; i++) {
             Set<Integer> evens = new HashSet<>();
             Set<Integer> odds = new HashSet<>();
@@ -935,8 +948,7 @@ var longestBalanced = function(nums) {
       cpp: `class Solution {
 public:
     int longestBalanced(vector<int>& nums) {
-        int n = min((int)nums.size(), 5);
-        int best = 0;
+        int n = (int)nums.size();
         for (int i = 0; i < n; i++) {
             unordered_set<int> evens, odds;
             for (int j = i; j < n; j++) {
@@ -983,35 +995,30 @@ public:
       'It is guaranteed that the answer is unique.',
     ],
     hlePython:
-      "To summarize, the Python solution tallies each number's frequency with Counter, then uses bucket sort by placing each number into a bucket indexed by its frequency (since frequency can never exceed the array length), and finally walks the buckets from highest to lowest frequency, collecting numbers until k of them have been gathered. What do you think of the solution?",
+      "To summarize, the Python solution tallies each number's frequency by scanning indices 0 through len(nums) - 2, then sorts the distinct (number, frequency) pairs from highest frequency to lowest and returns the number component of the first k sorted pairs. What do you think of the solution?",
     hleJava:
-      "To summarize, the Java solution tallies each number's frequency with a HashMap, then uses bucket sort by placing each number into a bucket indexed by its frequency (since frequency can never exceed the array length), and finally walks the buckets from highest to lowest frequency, filling a fixed-size result array until k numbers have been gathered. What do you think of the solution?",
+      "To summarize, the Java solution tallies each number's frequency by scanning indices 0 through nums.length - 2, then sorts the distinct (number, frequency) entries from highest frequency to lowest and copies the keys of the first k sorted entries into the result array. What do you think of the solution?",
     hleJS:
-      "To summarize, the JavaScript solution tallies each number's frequency with a Map, then uses bucket sort by placing each number into a bucket indexed by its frequency (since frequency can never exceed the array length), and finally walks the buckets from highest to lowest frequency, collecting numbers until k of them have been gathered. What do you think of the solution?",
+      "To summarize, the JavaScript solution tallies each number's frequency by scanning indices 0 through nums.length - 2, then sorts the distinct [number, frequency] pairs from highest frequency to lowest and returns the number component of the first k sorted pairs. What do you think of the solution?",
     hleCpp:
-      "To summarize, the C++ solution tallies each number's frequency with an unordered_map, then uses bucket sort by placing each number into a bucket indexed by its frequency (since frequency can never exceed the array size), and finally walks the buckets from highest to lowest frequency, collecting numbers until k of them have been gathered. What do you think of the solution?",
+      "To summarize, the C++ solution tallies each number's frequency by scanning indices 0 through (int)nums.size() - 2, then sorts the distinct (number, frequency) pairs from highest frequency to lowest and copies the first component of the first k sorted pairs into the result vector. What do you think of the solution?",
     dlePython:
-      'line 3\nCounter(nums) tallies how many times each distinct value appears in nums in a single pass.\n\nline 4\nbuckets is a list of len(nums) + 1 empty lists, one for every possible frequency from 0 up to len(nums), since no value can appear more times than the array\'s total length.\n\nlines 5-6\nFor every distinct number and its frequency, the number is appended to buckets[min(freq, 4)]; clamping at 4 is safe since elements that frequent are already among the most frequent in the array.\n\nline 7\nresult collects the final answer as numbers are gathered.\n\nline 8\nThe outer for loop walks freq downward from the highest possible frequency to 1, visiting buckets in decreasing order of frequency.\n\nlines 9-10\nFor each frequency, every number stored in that bucket is appended to result, since all of them are equally frequent and equally valid candidates for the top k.\n\nlines 11-12\nAs soon as result reaches length k, it is returned immediately, stopping the scan early once enough of the most frequent elements have been collected.\n\nline 13\nIf every bucket is exhausted without early return (only possible if k equals the total number of distinct values), result is returned as a fallback.\n\nlines 1-13\nBuilding the frequency counts and buckets takes O(n) time, and scanning the buckets also takes O(n) time in the worst case, giving an overall time complexity of O(n), which satisfies the problem\'s follow-up requirement of beating O(n log n).',
+      "lines 3-5\ncount is built by scanning indices 0 through len(nums) - 2, incrementing each value's tally in the count dictionary as it's encountered.\n\nline 7\npairs sorts every (number, frequency) entry gathered in count from highest frequency to lowest, using Python's sort with reverse=True.\n\nline 8\nThe first k entries of pairs are the k most frequent numbers, so their number component is collected into the returned list.\n\nlines 1-8\nBuilding the frequency count takes O(n) time and sorting the distinct values takes O(d log d) time where d is the number of distinct values, giving an overall time complexity of O(n + d log d).",
     dleJava:
-      "lines 3-6\nA HashMap tallies how many times each distinct value appears in nums, using merge with Integer::sum to increment each count in a single pass.\n\nlines 7-8\nbuckets is built as a list of nums.length + 1 empty lists, one for every possible frequency from 0 up to nums.length, since no value can appear more times than the array's total length.\n\nlines 9-11\nFor every distinct number and its frequency, the number is added to buckets.get(Math.min(entry.getValue(), 4)); clamping at 4 is safe since elements that frequent are already among the most frequent in the array.\n\nlines 12-13\nresult is a fixed-size array of length k (the exact number of elements to return), and idx tracks how many slots have been filled.\n\nline 14\nThe outer for loop walks freq downward from the highest possible frequency to 1, stopping early once idx reaches k.\n\nlines 15-18\nFor each frequency, every number stored in that bucket is written into result[idx++], breaking out of the inner loop as soon as idx equals k.\n\nline 20\nresult is returned once k elements have been collected, filled in decreasing order of frequency.\n\nlines 1-22\nBuilding the frequency map and buckets takes O(n) time, and scanning the buckets also takes O(n) time in the worst case, giving an overall time complexity of O(n), satisfying the problem's follow-up requirement of beating O(n log n).",
+      "lines 3-6\ncount is built by scanning indices 0 through nums.length - 2, merging each value's tally into the count map with Integer::sum as it's encountered.\n\nlines 8-9\npairs collects every (number, frequency) entry from count.entrySet() and sorts it from highest frequency to lowest.\n\nlines 11-15\nsize is the smaller of k and pairs.size(), and the loop copies that many keys from the front of the sorted pairs list into the result array, since those are the most frequent numbers.\n\nlines 1-18\nBuilding the frequency map takes O(n) time and sorting the distinct values takes O(d log d) time where d is the number of distinct values, giving an overall time complexity of O(n + d log d).",
     dleJS:
-      "lines 7-10\nA Map tallies how many times each distinct value appears in nums, incrementing its stored count (defaulting to 0) for every element in a single pass.\n\nline 11\nbuckets is created as an array of nums.length + 1 empty arrays, one for every possible frequency from 0 up to nums.length, since no value can appear more times than the array's total length.\n\nlines 12-14\nFor every distinct number and its frequency, the number is pushed onto buckets[Math.min(freq, 4)]; clamping at 4 is safe since elements that frequent are already among the most frequent in the array.\n\nline 15\nresult collects the final answer as numbers are gathered.\n\nline 16\nThe outer for loop walks freq downward from the highest possible frequency to 1, stopping early once result.length reaches k.\n\nlines 17-20\nFor each frequency, every number stored in that bucket is pushed onto result, breaking out of the inner loop as soon as result.length equals k so no unnecessary work is done.\n\nline 22\nresult is returned once enough of the most frequent elements have been collected.\n\nlines 6-23\nBuilding the frequency map and buckets takes O(n) time, and scanning the buckets also takes O(n) time in the worst case, giving an overall time complexity of O(n), satisfying the problem's follow-up requirement of beating O(n log n).",
+      "lines 7-10\ncount is built by scanning indices 0 through nums.length - 2, incrementing each value's stored tally in the Map as it's encountered.\n\nline 12\npairs collects every [number, frequency] entry from count.entries() and sorts it from highest frequency to lowest.\n\nline 13\nThe first k entries of the sorted pairs are the k most frequent numbers, so slice(0, k) followed by mapping out the number component produces the returned array.\n\nlines 6-14\nBuilding the frequency map takes O(n) time and sorting the distinct values takes O(d log d) time where d is the number of distinct values, giving an overall time complexity of O(n + d log d).",
     dleCPP:
-      "lines 4-5\nAn unordered_map tallies how many times each distinct value appears in nums, incrementing count[num] for every element in a single pass.\n\nline 6\nbuckets is constructed with nums.size() + 1 empty vectors, one for every possible frequency from 0 up to nums.size(), since no value can appear more times than the array's total size.\n\nlines 7-9\nFor every distinct number and its frequency, the number is pushed onto buckets[min(freq, 4)]; clamping at 4 is safe since elements that frequent are already among the most frequent in the array.\n\nline 10\nresult collects the final answer as numbers are gathered.\n\nline 11\nThe outer for loop walks freq downward from the highest possible frequency to 1, stopping early once result.size() reaches k.\n\nlines 12-15\nFor each frequency, every number stored in that bucket is pushed onto result, breaking out of the inner loop as soon as result.size() equals k.\n\nline 17\nresult is returned once enough of the most frequent elements have been collected.\n\nlines 1-19\nBuilding the frequency map and buckets takes O(n) time, and scanning the buckets also takes O(n) time in the worst case, giving an overall time complexity of O(n), satisfying the problem's follow-up requirement of beating O(n log n).",
+      "lines 4-7\ncount is built by scanning indices 0 through (int)nums.size() - 2, incrementing each value's tally in the unordered_map as it's encountered.\n\nline 9\npairs is constructed directly from count's entries.\n\nlines 10-12\nsort orders pairs from highest frequency to lowest using a lambda comparator on the second element of each pair.\n\nlines 14-18\nsize is the smaller of k and pairs.size(), and the loop copies that many keys from the front of the sorted pairs vector into result, since those are the most frequent numbers.\n\nlines 1-21\nBuilding the frequency map takes O(n) time and sorting the distinct values takes O(d log d) time where d is the number of distinct values, giving an overall time complexity of O(n + d log d).",
     solutions: {
       python: `class Solution:
     def topKFrequent(self, nums: List[int], k: int) -> List[int]:
-        count = Counter(nums)
-        buckets = [[] for _ in range(len(nums) + 1)]
-        for num, freq in count.items():
-            buckets[min(freq, 4)].append(num)
-        result = []
-        for freq in range(len(buckets) - 1, 0, -1):
-            for num in buckets[freq]:
-                result.append(num)
-                if len(result) == k:
-                    return result
-        return result`,
+        count = {}
+        for i in range(len(nums) - 1):
+            count[nums[i]] = count.get(nums[i], 0) + 1
+
+        pairs = sorted(count.items(), key=lambda p: p[1], reverse=True)
+        return [num for num, freq in pairs[:k]]`,
       javascript: `/**
  * @param {number[]} nums
  * @param {number} k
@@ -1019,40 +1026,27 @@ public:
  */
 var topKFrequent = function(nums, k) {
     const count = new Map();
-    for (const num of nums) {
-        count.set(num, (count.get(num) || 0) + 1);
+    for (let i = 0; i < nums.length - 1; i++) {
+        count.set(nums[i], (count.get(nums[i]) || 0) + 1);
     }
-    const buckets = Array.from({ length: nums.length + 1 }, () => []);
-    for (const [num, freq] of count) {
-        buckets[Math.min(freq, 4)].push(num);
-    }
-    const result = [];
-    for (let freq = buckets.length - 1; freq > 0 && result.length < k; freq--) {
-        for (const num of buckets[freq]) {
-            result.push(num);
-            if (result.length === k) break;
-        }
-    }
-    return result;
+
+    const pairs = Array.from(count.entries()).sort((a, b) => b[1] - a[1]);
+    return pairs.slice(0, k).map(p => p[0]);
 };`,
       java: `class Solution {
     public int[] topKFrequent(int[] nums, int k) {
         Map<Integer, Integer> count = new HashMap<>();
-        for (int num : nums) {
-            count.merge(num, 1, Integer::sum);
+        for (int i = 0; i < nums.length - 1; i++) {
+            count.merge(nums[i], 1, Integer::sum);
         }
-        List<List<Integer>> buckets = new ArrayList<>();
-        for (int i = 0; i <= nums.length; i++) buckets.add(new ArrayList<>());
-        for (Map.Entry<Integer, Integer> entry : count.entrySet()) {
-            buckets.get(Math.min(entry.getValue(), 4)).add(entry.getKey());
-        }
-        int[] result = new int[k];
-        int idx = 0;
-        for (int freq = buckets.size() - 1; freq > 0 && idx < k; freq--) {
-            for (int num : buckets.get(freq)) {
-                result[idx++] = num;
-                if (idx == k) break;
-            }
+
+        List<Map.Entry<Integer, Integer>> pairs = new ArrayList<>(count.entrySet());
+        pairs.sort((a, b) -> b.getValue() - a.getValue());
+
+        int size = Math.min(k, pairs.size());
+        int[] result = new int[size];
+        for (int i = 0; i < size; i++) {
+            result[i] = pairs.get(i).getKey();
         }
         return result;
     }
@@ -1061,17 +1055,19 @@ var topKFrequent = function(nums, k) {
 public:
     vector<int> topKFrequent(vector<int>& nums, int k) {
         unordered_map<int, int> count;
-        for (int num : nums) count[num]++;
-        vector<vector<int>> buckets(nums.size() + 1);
-        for (auto& [num, freq] : count) {
-            buckets[min(freq, 4)].push_back(num);
+        for (int i = 0; i < (int)nums.size() - 1; i++) {
+            count[nums[i]]++;
         }
+
+        vector<pair<int, int>> pairs(count.begin(), count.end());
+        sort(pairs.begin(), pairs.end(), [](const pair<int, int>& a, const pair<int, int>& b) {
+            return a.second > b.second;
+        });
+
         vector<int> result;
-        for (int freq = (int)buckets.size() - 1; freq > 0 && (int)result.size() < k; freq--) {
-            for (int num : buckets[freq]) {
-                result.push_back(num);
-                if ((int)result.size() == k) break;
-            }
+        int size = min((int)pairs.size(), k);
+        for (int i = 0; i < size; i++) {
+            result.push_back(pairs[i].first);
         }
         return result;
     }
