@@ -151,13 +151,13 @@ function EditorPanel({
         />
       </div>
 
-      {solutionVisible && testsGateOpen && (
+      {/* {solutionVisible && testsGateOpen && (
         showPassedLabel ? (
           <div className="test-pass-label">The solution passed all example test cases</div>
         ) : (
           <div className="test-pass-label test-pass-label-pending">Running tests on the solution...</div>
         )
-      )}
+      )} */}
 
       {/* <div className="console-area">
         <div className="console-header">
