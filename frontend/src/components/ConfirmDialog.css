@@ -20,6 +20,10 @@
   animation: confirm-dialog-scale-in 0.15s ease-out;
 }
 
+.confirm-dialog-wide {
+  max-width: 480px;
+}
+
 .confirm-dialog-title {
   font-size: 16px;
   font-weight: 600;
@@ -41,6 +45,39 @@
   justify-content: flex-end;
 }
 
+.bug-type-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 20px 0;
+}
+
+.confirm-dialog-followup {
+  font-weight: 600;
+  color: #fff;
+  margin: -8px 0 12px 0;
+}
+
+.bug-type-choice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #d1d1d1;
+  cursor: pointer;
+}
+
+.bug-type-choice input[type='radio'] {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.bug-type-choice-label {
+  font-weight: 600;
+  color: #fff;
+}
+
 .confirm-dialog-btn {
   padding: 8px 20px;
   border: none;
@@ -49,6 +86,11 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.confirm-dialog-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .confirm-dialog-btn-cancel {

@@ -212,6 +212,8 @@ function UserDetail() {
                     <th>Voice Replays</th>
                     <th>Language</th>
                     <th>Response</th>
+                    <th>Bug Type</th>
+                    <th>Certainty</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -250,6 +252,8 @@ function UserDetail() {
                             responseLabel(problem)
                           )}
                         </td>
+                        <td>{problem.bugType || '—'}</td>
+                        <td>{problem.certainty || '—'}</td>
                       </tr>
                     )
                   })}

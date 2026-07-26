@@ -82,6 +82,12 @@ async function initializeDatabase() {
   await pool.query(`
     ALTER TABLE problem_completions ADD COLUMN IF NOT EXISTS leetcode_verified TEXT
   `);
+  await pool.query(`
+    ALTER TABLE problem_completions ADD COLUMN IF NOT EXISTS bug_type TEXT
+  `);
+  await pool.query(`
+    ALTER TABLE problem_completions ADD COLUMN IF NOT EXISTS certainty TEXT
+  `);
   console.log('Problem completions table ready');
 
   // Generic log of participant UI events/metrics (e.g. "opened_problem", "language_changed").
@@ -217,17 +223,22 @@ const dbOperations = {
   },
 
   // Record that a participant completed a problem, along with their accept/reject response (idempotent).
-  // `code` is the edited solution text submitted after a reject, when applicable.
-  markProblemCompleted: async (participantId, problemId, response, code) => {
+  // `code` is the edited solution text submitted after a reject, when applicable. `bugType` and
+  // `certainty` are the participant's self-reported bug diagnosis, collected on reject.
+  markProblemCompleted: async (participantId, problemId, response, code, bugType, certainty) => {
     const user = await dbOperations.findUserByParticipantId(participantId);
     if (!user) {
       throw new Error('User not found');
     }
     await pool.query(
-      `INSERT INTO problem_completions (user_id, problem_id, response, submitted_code)
-       VALUES ($1, $2, $3, $4)
-       ON CONFLICT (user_id, problem_id) DO UPDATE SET response = EXCLUDED.response, submitted_code = EXCLUDED.submitted_code`,
-      [user.id, problemId, response || null, code || null]
+      `INSERT INTO problem_completions (user_id, problem_id, response, submitted_code, bug_type, certainty)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (user_id, problem_id) DO UPDATE SET
+         response = EXCLUDED.response,
+         submitted_code = EXCLUDED.submitted_code,
+         bug_type = EXCLUDED.bug_type,
+         certainty = EXCLUDED.certainty`,
+      [user.id, problemId, response || null, code || null, bugType || null, certainty || null]
     );
     return { userId: user.id, problemId };
   },
@@ -239,7 +250,7 @@ const dbOperations = {
       return null;
     }
     const { rows } = await pool.query(
-      'SELECT problem_id, completed_at, response, submitted_code, leetcode_verified FROM problem_completions WHERE user_id = $1',
+      'SELECT problem_id, completed_at, response, submitted_code, leetcode_verified, bug_type, certainty FROM problem_completions WHERE user_id = $1',
       [user.id]
     );
     return rows;

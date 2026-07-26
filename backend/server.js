@@ -288,11 +288,28 @@ app.post('/api/users/:participantId/group', async (req, res) => {
 
 const VALID_COMPLETION_RESPONSES = ['accept', 'reject', 'timeout'];
 
+const VALID_BUG_TYPES = [
+  'Syntax Error',
+  'Silly Mistake',
+  'Missing Corner Cases',
+  'Wrong Input Type',
+  'Hallucinated Object',
+  'Wrong Attribute',
+];
+
+const VALID_CERTAINTY_LEVELS = [
+  'Very Uncertain',
+  'Uncertain',
+  'Neither Certain nor Uncertain',
+  'Certain',
+  'Very Certain',
+];
+
 // Record that a participant completed a problem (called by the study frontend)
 app.post('/api/users/:participantId/completions', async (req, res) => {
   try {
     const { participantId } = req.params;
-    const { problemId, response, code } = req.body;
+    const { problemId, response, code, bugType, certainty } = req.body;
 
     if (!problemId) {
       return res.status(400).json({ success: false, message: 'problemId is required' });
@@ -306,7 +323,15 @@ app.post('/api/users/:participantId/completions', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid code value' });
     }
 
-    await db.markProblemCompleted(participantId, problemId, response, code);
+    if (bugType && !VALID_BUG_TYPES.includes(bugType)) {
+      return res.status(400).json({ success: false, message: 'Invalid bugType value' });
+    }
+
+    if (certainty && !VALID_CERTAINTY_LEVELS.includes(certainty)) {
+      return res.status(400).json({ success: false, message: 'Invalid certainty value' });
+    }
+
+    await db.markProblemCompleted(participantId, problemId, response, code, bugType, certainty);
     res.json({ success: true });
   } catch (error) {
     console.error('Error recording completion:', error);
@@ -373,7 +398,9 @@ app.get('/api/users/:participantId/progress', async (req, res) => {
         completedAt: completion?.completed_at || null,
         response: completion?.response || null,
         submittedCode: completion?.submitted_code || null,
-        leetcodeVerified: completion?.leetcode_verified || null
+        leetcodeVerified: completion?.leetcode_verified || null,
+        bugType: completion?.bug_type || null,
+        certainty: completion?.certainty || null
       };
     });
 

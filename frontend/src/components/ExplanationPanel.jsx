@@ -26,6 +26,41 @@ function renderDetailedExplanation(text, currentBlockIndex) {
   })
 }
 
+const BUG_TYPES = [
+  {
+    label: 'Syntax Error',
+    description: 'The code contains syntax errors, such as a missing parenthesis or semicolon.',
+  },
+  {
+    label: 'Silly Mistake',
+    description: 'The code contains issues such as redundant conditions or unnecessary casting.',
+  },
+  {
+    label: 'Missing Corner Cases',
+    description: 'The code operates correctly, except for overlooking certain corner cases.',
+  },
+  {
+    label: 'Wrong Input Type',
+    description: 'The code contains an incorrect input type in a correct function call.',
+  },
+  {
+    label: 'Hallucinated Object',
+    description: 'The code utilizes an object that neither exists nor has been defined.',
+  },
+  {
+    label: 'Wrong Attribute',
+    description: 'The code contains an incorrect/nonexistent attribute for an object or module.',
+  },
+]
+
+const CERTAINTY_LEVELS = [
+  'Very Uncertain',
+  'Uncertain',
+  'Neither Certain nor Uncertain',
+  'Certain',
+  'Very Certain',
+]
+
 function ExplanationPanel({
   problem,
   language,
@@ -44,9 +79,13 @@ function ExplanationPanel({
   onDialogOpenChange,
 }) {
   const [pendingAction, setPendingAction] = useState(null)
+  const [bugType, setBugType] = useState(null)
+  const [certainty, setCertainty] = useState(null)
 
   const openDialog = (action) => {
     setPendingAction(action)
+    setBugType(null)
+    setCertainty(null)
     onDialogOpenChange?.(true)
   }
 
@@ -58,14 +97,31 @@ function ExplanationPanel({
   const confirmAccept = () => {
     console.log('Solution accepted')
     closeDialog()
-    onResolved?.(problem?.id, 'accept')
+    onResolved?.(problem?.id, 'accept', null, null, certainty)
   }
 
   const confirmReject = () => {
-    console.log('Solution rejected, entering edit mode')
+    console.log('Solution rejected')
     closeDialog()
-    onStartEditing?.()
+    onResolved?.(problem?.id, 'reject', null, bugType, certainty)
   }
+
+  const renderCertaintyChoices = () => (
+    <div className="bug-type-choices">
+      {CERTAINTY_LEVELS.map((level) => (
+        <label className="bug-type-choice" key={level}>
+          <input
+            type="radio"
+            name="certainty"
+            value={level}
+            checked={certainty === level}
+            onChange={() => setCertainty(level)}
+          />
+          {level}
+        </label>
+      ))}
+    </div>
+  )
 
   const confirmSubmit = () => {
     console.log('Edited solution submitted')
@@ -154,22 +210,50 @@ function ExplanationPanel({
       <ConfirmDialog
         open={pendingAction === 'accept'}
         title="Accept AI solution?"
-        message="By accepting the solution, you have evaluated that it would pass all the test cases, do you want to proceed?"
+        message="By accepting the solution, you have evaluated that it would pass all the test cases, how certain are you of this?"
         confirmLabel="Accept"
         variant="accept"
         onConfirm={confirmAccept}
         onCancel={closeDialog}
-      />
+        confirmDisabled={!certainty}
+        wide
+      >
+        {renderCertaintyChoices()}
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={pendingAction === 'reject'}
         title="Reject AI solution?"
-        message={`By rejecting the solution, you have evaluated that it would fail some or all test cases.\n\nThis would make the text editor writable, and allow you to make changes to AI's solution until you have evaluated it to be correct and pass all test cases.\n\nDo you want to proceed?`}
+        message="You have evaluated the code to contain an error that would cause it to fail certain/all test cases. Which of the following bug type do you think caused this failure?"
         confirmLabel="Proceed"
         variant="reject"
         onConfirm={confirmReject}
         onCancel={closeDialog}
-      />
+        confirmDisabled={!bugType || !certainty}
+        wide
+      >
+        <div className="bug-type-choices">
+          {BUG_TYPES.map(({ label, description }) => (
+            <label className="bug-type-choice" key={label}>
+              <input
+                type="radio"
+                name="bug-type"
+                value={label}
+                checked={bugType === label}
+                onChange={() => setBugType(label)}
+              />
+              <span>
+                <span className="bug-type-choice-label">{label}</span>
+                {' - '}
+                {description}
+              </span>
+            </label>
+          ))}
+        </div>
+
+        <p className="confirm-dialog-message confirm-dialog-followup">How certain are you of your response?</p>
+        {renderCertaintyChoices()}
+      </ConfirmDialog>
 
       <ConfirmDialog
         open={pendingAction === 'submit'}

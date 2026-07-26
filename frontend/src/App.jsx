@@ -212,7 +212,7 @@ function App() {
     wasNarrationSpeakingRef.current = false
   }, [narration.isSpeaking, narration.isReplaying])
 
-  const handleSolutionResolved = (problemId, response, submittedCode = null) => {
+  const handleSolutionResolved = (problemId, response, submittedCode = null, bugType = null, certainty = null) => {
     if (participantId) localStorage.removeItem(`${SESSION_STORAGE_PREFIX}${participantId}`)
     setCompletedProblemIds((prev) => (prev.includes(problemId) ? prev : [...prev, problemId]))
     setSelectedProblem(null)
@@ -222,6 +222,8 @@ function App() {
       logEvent(participantId, 'accept_reject_clicked', {
         problemId,
         response,
+        bugType,
+        certainty,
         studyGroup: isExperimental ? 'experimental' : 'control',
         timestamp: formatTimestamp(),
       })
@@ -230,7 +232,7 @@ function App() {
     fetch(`${API_URL}/users/${participantId}/completions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ problemId, response, code: submittedCode })
+      body: JSON.stringify({ problemId, response, code: submittedCode, bugType, certainty })
     }).catch((err) => console.error('Error syncing completed problem:', err))
   }
 
