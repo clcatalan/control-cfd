@@ -15,40 +15,57 @@ const PROBLEM_TIME_LIMIT_SECONDS = 30 * 60
 const SESSION_STORAGE_PREFIX = 'problemSession_'
 
 // Walks a first-time participant through the main UI regions on the sample (id 0) problem.
-const SAMPLE_PROBLEM_TOUR_STEPS = [
-  {
-    selector: '[data-tour="problem-panel"]',
-    title: 'Problem Description',
-    body: 'This is the problem description. Read it carefully to understand what the problem is asking for.',
-  },
-  {
-    selector: '[data-tour="editor-panel"]',
-    title: 'AI-Generated Solution',
-    body: 'This panel will contain the AI-generated solution. Select the language you are comfortable working on, then click the Generate AI Solution button to generate it. Review it and decide whether to accept or reject it.',
-  },
-  {
-    selector: '[data-tour="explanation-panel"]',
-    title: 'AI Explanation',
-    body: "This panel will contain the AI's explanation for the solution.",
-  },
-  {
-    selector: '[data-tour="accept-reject-buttons"]',
-    title: 'Accept or Reject',
-    body: 'Evaluate the AI solution if it passes all test cases (example and hidden). Do not concern yourself with the optimality of the solution, just evaluate according to correctness.',
-  },
-  {
-    selector: '[data-tour-dialog="accept"]',
-    dialog: 'accept',
-    title: 'Accept Confirmation',
-    body: 'Clicking Accept opens this confirmation. It asks how certain you are that the solution passes all the test cases.',
-  },
-  {
-    selector: '[data-tour-dialog="reject"]',
-    dialog: 'reject',
-    title: 'Reject Confirmation',
-    body: 'Clicking Reject opens this confirmation. It asks you to identify the type of bug you believe caused the failure, and how certain you are of that diagnosis.',
-  },
-]
+// Step 3 (AI Explanation) differs by study group: the experimental group gets voice
+// narration of the explanation, so their tour text calls that out instead of describing
+// the plain text panel the control group sees.
+function getSampleProblemTourSteps(isExperimental) {
+  return [
+    {
+      selector: '[data-tour="problem-panel"]',
+      title: 'Problem Description',
+      body: 'This is the problem description. Read it carefully to understand what the problem is asking for.',
+    },
+    {
+      selector: '[data-tour="editor-panel"]',
+      title: 'AI-Generated Solution',
+      body: 'This panel will contain the AI-generated solution. Select the language you are comfortable working on the upper-left dropdown, then click the Generate AI Solution button to generate it. Review it and decide whether to accept or reject it. The editor is read-only, to constrain you to using the AI',
+    },
+    {
+      selector: '[data-tour="explanation-panel"]',
+      title: 'AI Explanation',
+      body: isExperimental
+        ? 'Upon generating the solution, a voice AI feature will speak and read out its explanation to you, listen carefully. We advise you to wear headphones during this stage so as to not bother people in your surroundings. You may repeat it again with the Play AI Explanation button'
+        : "This panel will contain the AI's explanation for the solution.",
+    },
+    {
+      selector: '[data-tour="accept-reject-buttons"]',
+      title: 'Accept or Reject',
+      body: 'Evaluate the AI solution if it passes all test cases (example and hidden). Do not concern yourself with the optimality of the solution, just evaluate according to correctness.',
+    },
+    {
+      selector: '[data-tour-dialog="accept"]',
+      dialog: 'accept',
+      title: 'Accept Confirmation',
+      body: 'Clicking Accept opens this confirmation. It asks how certain you are that the solution passes all the test cases.',
+    },
+    {
+      selector: '[data-tour-dialog="reject"]',
+      dialog: 'reject',
+      title: 'Reject Confirmation',
+      body: 'Clicking Reject opens this confirmation. It asks you to identify the type of bug you believe caused the failure, and how certain you are of that diagnosis.',
+    },
+    {
+      selector: '[data-tour="timer"]',
+      title: 'Time Limit',
+      body: 'You are given 30 minutes to do each problem. Keep note of this',
+    },
+    {
+      selector: null,
+      title: 'Onboarding Complete',
+      body: "And that's the conclusion of the onboarding steps. You may view this anytime during the study should you forget the instructions. Clicking Done will return you to the main problem list page",
+    },
+  ]
+}
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60)
@@ -114,6 +131,7 @@ function App() {
   // "experimental" group (via the admin panel) get it. Anyone else (control
   // group, or not yet assigned) gets the original text-only explanation.
   const isExperimental = userData?.studyGroup === 'experimental'
+  const sampleProblemTourSteps = getSampleProblemTourSteps(isExperimental)
 
   const narration = useAiNarration({
     problem: selectedProblem,
@@ -190,11 +208,11 @@ function App() {
   // Sample-problem tour: previews the real Accept/Reject confirmation dialogs on their
   // dedicated steps, so the ConfirmDialog rendered by ExplanationPanel doubles as the
   // preview — no separate mock dialog to keep in sync with the real one.
-  const currentTourStep = showSampleTour ? SAMPLE_PROBLEM_TOUR_STEPS[tourStepIndex] : null
+  const currentTourStep = showSampleTour ? sampleProblemTourSteps[tourStepIndex] : null
   const tourForcedDialog = currentTourStep?.dialog ?? null
 
   const handleTourNext = () => {
-    if (tourStepIndex + 1 >= SAMPLE_PROBLEM_TOUR_STEPS.length) {
+    if (tourStepIndex + 1 >= sampleProblemTourSteps.length) {
       setShowSampleTour(false)
       if (participantId) localStorage.removeItem(`${SESSION_STORAGE_PREFIX}${participantId}`)
       setSelectedProblem(null)
@@ -440,7 +458,7 @@ function App() {
           <span className="participant-id">Participant: {participantId}</span>
         </div>
         <div className="header-right">
-          <span className={`timer ${timeRemaining <= 60 ? 'timer-warning' : ''}`}>
+          <span className={`timer ${timeRemaining <= 60 ? 'timer-warning' : ''}`} data-tour="timer">
             Time left: {formatTime(timeRemaining)}
           </span>
           <button className="logout-button" onClick={handleLogout}>
@@ -499,7 +517,7 @@ function App() {
       </div>
       {showSampleTour && (
         <OnboardingTour
-          steps={SAMPLE_PROBLEM_TOUR_STEPS}
+          steps={sampleProblemTourSteps}
           stepIndex={tourStepIndex}
           onNext={handleTourNext}
           onPrevious={handleTourPrevious}

@@ -121,7 +121,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
         )}
         {onboardingProblem && (
           <section className="week-section">
-            <h2 className="week-label">Sample Problem</h2>
+            <h2 className="week-label">Onboarding Instructions</h2>
             <div className="problem-grid">
               {(() => {
                 const isCompleted = completedProblemIds.includes(onboardingProblem.id)
@@ -132,7 +132,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
                     title={isCompleted ? 'Already completed' : undefined}
                     onClick={() => !isCompleted && onSelectProblem && onSelectProblem(onboardingProblem)}
                   >
-                    <span className="problem-title">Onboarding Problem</span>
+                    <span className="problem-title">Sample Problem (Complete this first to unlock other problems)</span>
                     {isCompleted && <span className="problem-done-badge">Done</span>}
                   </button>
                 )

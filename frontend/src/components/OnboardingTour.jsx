@@ -98,9 +98,9 @@ function OnboardingTour({ steps, stepIndex, onNext, onPrevious, onClose }) {
         <h3 className="onboarding-tour-title">{step.title}</h3>
         <p className="onboarding-tour-body">{step.body}</p>
         <div className="onboarding-tour-actions">
-          <button className="onboarding-tour-skip" onClick={onClose}>
+          {/* <button className="onboarding-tour-skip" onClick={onClose}>
             Skip
-          </button>
+          </button> */}
           <div className="onboarding-tour-nav">
             {!isFirst && (
               <button className="onboarding-tour-btn onboarding-tour-btn-prev" onClick={onPrevious}>
