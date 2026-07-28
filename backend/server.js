@@ -311,7 +311,7 @@ app.post('/api/users/:participantId/completions', async (req, res) => {
     const { participantId } = req.params;
     const { problemId, response, code, bugType, certainty } = req.body;
 
-    if (!problemId) {
+    if (problemId === undefined || problemId === null) {
       return res.status(400).json({ success: false, message: 'problemId is required' });
     }
 
@@ -332,6 +332,13 @@ app.post('/api/users/:participantId/completions', async (req, res) => {
     }
 
     await db.markProblemCompleted(participantId, problemId, response, code, bugType, certainty);
+
+    // Problem 0 is the sample onboarding problem; finishing it is what unlocks
+    // the real scheduled problems, replacing the old "watch a video" gate.
+    if (Number(problemId) === 0) {
+      await db.markOnboardingCompleted(participantId);
+    }
+
     res.json({ success: true });
   } catch (error) {
     console.error('Error recording completion:', error);
@@ -414,7 +421,9 @@ app.get('/api/users/:participantId/progress', async (req, res) => {
   }
 });
 
-// Get whether a participant has completed the onboarding video (gates problem availability; called by the study frontend)
+// Get whether a participant has completed onboarding (the sample problem 0; gates
+// problem availability; called by the study frontend). Onboarding itself is marked
+// complete as a side effect of finishing problem 0 in the completions route above.
 app.get('/api/users/:participantId/onboarding', async (req, res) => {
   try {
     const { participantId } = req.params;
@@ -430,26 +439,6 @@ app.get('/api/users/:participantId/onboarding', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching onboarding status'
-    });
-  }
-});
-
-// Record that a participant has watched the onboarding video (called by the study frontend)
-app.post('/api/users/:participantId/onboarding', async (req, res) => {
-  try {
-    const { participantId } = req.params;
-    const result = await db.markOnboardingCompleted(participantId);
-
-    if (!result) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    res.json({ success: true, completed: true, completedAt: result.onboarding_completed_at });
-  } catch (error) {
-    console.error('Error marking onboarding completed:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error marking onboarding completed'
     });
   }
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import ConfirmDialog from './ConfirmDialog'
 import { languageFields, parseDetailedExplanation } from '../utils/explanationParsing'
 import './ExplanationPanel.css'
@@ -77,6 +77,7 @@ function ExplanationPanel({
   onCancelEditing,
   onSubmit,
   onDialogOpenChange,
+  tourForcedDialog,
 }) {
   const [pendingAction, setPendingAction] = useState(null)
   const [bugType, setBugType] = useState(null)
@@ -94,15 +95,29 @@ function ExplanationPanel({
     onDialogOpenChange?.(false)
   }
 
+  // The sample-problem tour previews the real Accept/Reject dialogs by forcing them open
+  // here instead of rendering separate mock dialogs. Reacts only to the tour advancing
+  // steps (not to the dialog being closed via Cancel), so Cancel doesn't get reopened.
+  useEffect(() => {
+    if (tourForcedDialog) {
+      openDialog(tourForcedDialog)
+    } else if (pendingAction === 'accept' || pendingAction === 'reject') {
+      closeDialog()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tourForcedDialog])
+
   const confirmAccept = () => {
-    console.log('Solution accepted')
     closeDialog()
+    if (tourForcedDialog === 'accept') return
+    console.log('Solution accepted')
     onResolved?.(problem?.id, 'accept', null, null, certainty)
   }
 
   const confirmReject = () => {
-    console.log('Solution rejected')
     closeDialog()
+    if (tourForcedDialog === 'reject') return
+    console.log('Solution rejected')
     onResolved?.(problem?.id, 'reject', null, bugType, certainty)
   }
 
@@ -138,6 +153,9 @@ function ExplanationPanel({
   const fields = languageFields[language] || languageFields.javascript
   const highLevelExplanation = problem?.[fields.hle]
   const detailedExplanation = problem?.[fields.dle]
+  // Problem 0 is the sample onboarding problem — show a placeholder instead of a
+  // real explanation, since it's just for practicing the accept/reject UI.
+  const isOnboardingProblem = problem?.id === 0
 
   return (
     <div className="explanation-panel">
@@ -170,22 +188,28 @@ function ExplanationPanel({
           </div>
         )}
         {visible && !narrationEnabled && (
-          <>
+          isOnboardingProblem ? (
             <div className="explanation-section">
-              <h4>Explanation</h4>
-              {renderDetailedExplanation(detailedExplanation, currentBlockIndex)}
+              <p className="explanation-text">This panel will contain AI's explanation for its solution</p>
             </div>
-            <div className="explanation-section">
-              <h4>Summary</h4>
-              <p className={`explanation-text${currentBlockIndex === 0 ? ' is-speaking' : ''}`}>
-                {highLevelExplanation || 'No high-level explanation available yet.'}
-              </p>
-            </div>
-          </>
+          ) : (
+            <>
+              <div className="explanation-section">
+                <h4>Explanation</h4>
+                {renderDetailedExplanation(detailedExplanation, currentBlockIndex)}
+              </div>
+              <div className="explanation-section">
+                <h4>Summary</h4>
+                <p className={`explanation-text${currentBlockIndex === 0 ? ' is-speaking' : ''}`}>
+                  {highLevelExplanation || 'No high-level explanation available yet.'}
+                </p>
+              </div>
+            </>
+          )
         )}
       </div>
 
-      <div className="explanation-footer">
+      <div className="explanation-footer" data-tour="accept-reject-buttons">
         {isEditing ? (
           <>
             <button className="btn-back" onClick={() => openDialog('back')} disabled={!visible || isSpeaking}>
@@ -217,6 +241,7 @@ function ExplanationPanel({
         onCancel={closeDialog}
         confirmDisabled={!certainty}
         wide
+        tourId="accept"
       >
         {renderCertaintyChoices()}
       </ConfirmDialog>
@@ -231,6 +256,7 @@ function ExplanationPanel({
         onCancel={closeDialog}
         confirmDisabled={!bugType || !certainty}
         wide
+        tourId="reject"
       >
         <div className="bug-type-choices">
           {BUG_TYPES.map(({ label, description }) => (

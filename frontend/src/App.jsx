@@ -4,6 +4,7 @@ import EditorPanel from './components/EditorPanel'
 import ExplanationPanel from './components/ExplanationPanel'
 import Login from './components/Login'
 import ProblemList from './components/ProblemList'
+import OnboardingTour from './components/OnboardingTour'
 import { useAiNarration } from './hooks/useAiNarration'
 import { logEvent, formatTimestamp } from './utils/logEvent'
 import leetcodeProblems from './data/leetcodeProblems-new'
@@ -12,6 +13,42 @@ import './App.css'
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 const PROBLEM_TIME_LIMIT_SECONDS = 30 * 60
 const SESSION_STORAGE_PREFIX = 'problemSession_'
+
+// Walks a first-time participant through the main UI regions on the sample (id 0) problem.
+const SAMPLE_PROBLEM_TOUR_STEPS = [
+  {
+    selector: '[data-tour="problem-panel"]',
+    title: 'Problem Description',
+    body: 'This is the problem description. Read it carefully to understand what the problem is asking for.',
+  },
+  {
+    selector: '[data-tour="editor-panel"]',
+    title: 'AI-Generated Solution',
+    body: 'This panel will contain the AI-generated solution. Select the language you are comfortable working on, then click the Generate AI Solution button to generate it. Review it and decide whether to accept or reject it.',
+  },
+  {
+    selector: '[data-tour="explanation-panel"]',
+    title: 'AI Explanation',
+    body: "This panel will contain the AI's explanation for the solution.",
+  },
+  {
+    selector: '[data-tour="accept-reject-buttons"]',
+    title: 'Accept or Reject',
+    body: 'Evaluate the AI solution if it passes all test cases (example and hidden). Do not concern yourself with the optimality of the solution, just evaluate according to correctness.',
+  },
+  {
+    selector: '[data-tour-dialog="accept"]',
+    dialog: 'accept',
+    title: 'Accept Confirmation',
+    body: 'Clicking Accept opens this confirmation. It asks how certain you are that the solution passes all the test cases.',
+  },
+  {
+    selector: '[data-tour-dialog="reject"]',
+    dialog: 'reject',
+    title: 'Reject Confirmation',
+    body: 'Clicking Reject opens this confirmation. It asks you to identify the type of bug you believe caused the failure, and how certain you are of that diagnosis.',
+  },
+]
 
 const formatTime = (totalSeconds) => {
   const minutes = Math.floor(totalSeconds / 60)
@@ -53,6 +90,8 @@ function App() {
   const [middleWidth, setMiddleWidth] = useState(40)
   const [activeHandle, setActiveHandle] = useState(null)
   const [completedProblemIds, setCompletedProblemIds] = useState([])
+  const [showSampleTour, setShowSampleTour] = useState(false)
+  const [tourStepIndex, setTourStepIndex] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(() => {
     const session = loadPersistedSession()
     if (!session) return PROBLEM_TIME_LIMIT_SECONDS
@@ -144,6 +183,32 @@ function App() {
     wasNarrationSpeakingRef.current = false
     firstReadCompletedLoggedRef.current = false
     setNarrationFirstReadDone(false)
+    setShowSampleTour(problem.id === 0)
+    setTourStepIndex(0)
+  }
+
+  // Sample-problem tour: previews the real Accept/Reject confirmation dialogs on their
+  // dedicated steps, so the ConfirmDialog rendered by ExplanationPanel doubles as the
+  // preview — no separate mock dialog to keep in sync with the real one.
+  const currentTourStep = showSampleTour ? SAMPLE_PROBLEM_TOUR_STEPS[tourStepIndex] : null
+  const tourForcedDialog = currentTourStep?.dialog ?? null
+
+  const handleTourNext = () => {
+    if (tourStepIndex + 1 >= SAMPLE_PROBLEM_TOUR_STEPS.length) {
+      setShowSampleTour(false)
+      if (participantId) localStorage.removeItem(`${SESSION_STORAGE_PREFIX}${participantId}`)
+      setSelectedProblem(null)
+    } else {
+      setTourStepIndex((i) => i + 1)
+    }
+  }
+
+  const handleTourPrevious = () => {
+    setTourStepIndex((i) => Math.max(0, i - 1))
+  }
+
+  const handleTourClose = () => {
+    setShowSampleTour(false)
   }
 
   const handleLanguageChange = (newLanguage) => {
@@ -357,7 +422,6 @@ function App() {
     return (
       <ProblemList
         participantId={participantId}
-        studyGroup={userData?.studyGroup}
         onSelectProblem={handleSelectProblem}
         onLogout={handleLogout}
         completedProblemIds={completedProblemIds}
@@ -385,14 +449,14 @@ function App() {
         </div>
       </div>
       <div className="app-content">
-        <div className="panel-left" style={{ width: `${leftWidth}%` }}>
+        <div className="panel-left" style={{ width: `${leftWidth}%` }} data-tour="problem-panel">
           <ProblemPanel problem={selectedProblem} />
         </div>
-        <div 
+        <div
           className={`resize-handle ${activeHandle === 'left' ? 'dragging' : ''}`}
           onMouseDown={() => handleMouseDown('left')}
         />
-        <div className="panel-middle" style={{ width: `${middleWidth}%` }}>
+        <div className="panel-middle" style={{ width: `${middleWidth}%` }} data-tour="editor-panel">
           <EditorPanel
             problem={selectedProblem}
             language={language}
@@ -412,7 +476,7 @@ function App() {
           className={`resize-handle ${activeHandle === 'right' ? 'dragging' : ''}`}
           onMouseDown={() => handleMouseDown('right')}
         />
-        <div className="panel-right" style={{ width: `${rightWidth}%` }}>
+        <div className="panel-right" style={{ width: `${rightWidth}%` }} data-tour="explanation-panel">
           <ExplanationPanel
             problem={selectedProblem}
             language={language}
@@ -429,9 +493,19 @@ function App() {
             onCancelEditing={handleCancelEditingSolution}
             onSubmit={handleSubmitEditedSolution}
             onDialogOpenChange={handleDialogOpenChange}
+            tourForcedDialog={tourForcedDialog}
           />
         </div>
       </div>
+      {showSampleTour && (
+        <OnboardingTour
+          steps={SAMPLE_PROBLEM_TOUR_STEPS}
+          stepIndex={tourStepIndex}
+          onNext={handleTourNext}
+          onPrevious={handleTourPrevious}
+          onClose={handleTourClose}
+        />
+      )}
     </div>
   )
 }

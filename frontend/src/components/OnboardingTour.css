@@ -1,0 +1,131 @@
+.onboarding-tour-highlight {
+  position: fixed;
+  border: 3px solid #7b8ee8;
+  border-radius: 8px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+  z-index: 2000;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+}
+
+.onboarding-tour-popup {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2001;
+  background-color: #262626;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  padding: 20px 24px;
+  width: 100%;
+  max-width: 420px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.onboarding-tour-popup-bottom {
+  bottom: 32px;
+}
+
+/* Used when the popup sits beside a real ConfirmDialog rather than at a fixed
+   bottom-center spot — that side margin is often tight, so this trims padding and
+   text size to fit comfortably without needing to scroll. */
+.onboarding-tour-popup-compact {
+  padding: 14px 18px;
+}
+
+.onboarding-tour-popup-compact .onboarding-tour-step-count {
+  margin-bottom: 4px;
+}
+
+.onboarding-tour-popup-compact .onboarding-tour-title {
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.onboarding-tour-popup-compact .onboarding-tour-body {
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.onboarding-tour-popup-compact .onboarding-tour-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+}
+
+.onboarding-tour-step-count {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #9a9a9a;
+  margin: 0 0 8px 0;
+}
+
+.onboarding-tour-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin: 0 0 8px 0;
+}
+
+.onboarding-tour-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #d1d1d1;
+  margin: 0 0 20px 0;
+}
+
+.onboarding-tour-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.onboarding-tour-skip {
+  background: none;
+  border: none;
+  color: #9a9a9a;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+
+.onboarding-tour-skip:hover {
+  color: #d1d1d1;
+}
+
+.onboarding-tour-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.onboarding-tour-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.onboarding-tour-btn-prev {
+  background-color: #3c3c3c;
+  color: #fff;
+}
+
+.onboarding-tour-btn-prev:hover {
+  background-color: #4c4c4c;
+}
+
+.onboarding-tour-btn-next {
+  background-color: #0a84ff;
+  color: #fff;
+}
+
+.onboarding-tour-btn-next:hover {
+  background-color: #0972db;
+}

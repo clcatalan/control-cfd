@@ -185,8 +185,9 @@ const dbOperations = {
     return rows[0];
   },
 
-  // Record that a participant has watched the onboarding video (idempotent; keeps the first completion time).
-  // Problem availability is gated on this, so it must succeed before any problem unlocks.
+  // Record that a participant has finished the sample onboarding problem (idempotent;
+  // keeps the first completion time). Problem availability is gated on this, so it
+  // must succeed before any scheduled problem unlocks.
   markOnboardingCompleted: async (participantId) => {
     const { rows } = await pool.query(
       `UPDATE users SET onboarding_completed_at = COALESCE(onboarding_completed_at, NOW())

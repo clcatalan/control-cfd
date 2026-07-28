@@ -1,7 +1,7 @@
 import React from 'react'
 import './ConfirmDialog.css'
 
-function ConfirmDialog({ open, title, message, confirmLabel, cancelLabel, variant, onConfirm, onCancel, children, wide, confirmDisabled }) {
+function ConfirmDialog({ open, title, message, confirmLabel, cancelLabel, variant, onConfirm, onCancel, children, wide, confirmDisabled, tourId }) {
   if (!open) {
     return null
   }
@@ -12,6 +12,7 @@ function ConfirmDialog({ open, title, message, confirmLabel, cancelLabel, varian
         className={`confirm-dialog${wide ? ' confirm-dialog-wide' : ''}`}
         role="dialog"
         aria-modal="true"
+        data-tour-dialog={tourId}
         onClick={(event) => event.stopPropagation()}
       >
         <h3 className="confirm-dialog-title">{title}</h3>

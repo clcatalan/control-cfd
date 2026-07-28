@@ -1,5 +1,66 @@
 const leetcodeProblemsNew = [
   {
+    id: 0,
+    title: '2703. Return Length of Arguments Passed',
+    difficulty: 'Easy',
+    url: 'https://leetcode.com/problems/return-length-of-arguments-passed/description/',
+    description:
+      'Write a function argumentsLength that returns the count of arguments passed to it.',
+    examples: [
+      {
+        input: 'args = [5]',
+        output: '1',
+        explanation: 'One value was passed to the function so it should return 1.',
+      },
+      {
+        input: 'args = [{}, null, "3"]',
+        output: '3',
+        explanation: 'Three values were passed to the function so it should return 3.',
+      },
+    ],
+    constraints: ['args is a valid JSON array', '0 <= args.length <= 100'],
+    hlePython:
+      'To summarize, the Python solution accepts any number of positional arguments using *args and returns len(args), relying on Python packing every value passed into a tuple that can be measured directly. What do you think of the solution?',
+    hleJava:
+      'To summarize, the Java solution accepts any number of arguments using a varargs parameter (Object... args), which the compiler packs into an array, and returns args.length directly. What do you think of the solution?',
+    hleJS:
+      'To summarize, the JavaScript solution accepts any number of arguments using the rest parameter syntax (...args), which collects every argument into a real array, and returns args.length. What do you think of the solution?',
+    hleCpp:
+      'To summarize, the C++ solution uses a variadic template (Args... args) so the compiler accepts any number and mix of argument types, then returns sizeof...(args), which counts the parameter pack at compile time. What do you think of the solution?',
+    dlePython:
+      "line 2\n*args in the function signature tells Python to collect every positional value passed into a single tuple named args, no matter how many are given.\n\nline 3\nlen(args) counts the number of elements in that tuple, which is exactly the number of arguments the caller passed in.\n\nlines 1-3\nThe solution does constant-time work relative to the number of arguments n, giving O(n) time to build the tuple and O(1) time to measure it, with O(n) space to store the packed arguments.",
+    dleJava:
+      "line 2\nObject... args is Java's varargs syntax; the compiler packs every argument the caller passes into an Object array named args.\n\nline 3\nargs.length reads the size of that array directly, giving the count of arguments passed.\n\nlines 1-4\nThe method does O(1) work beyond the implicit O(n) array packing performed by the compiler for n arguments.",
+    dleJS:
+      "line 6\n...args is a rest parameter; JavaScript collects every argument passed to the function into a real array named args, regardless of count.\n\nline 7\nargs.length returns the number of elements in that array, which is exactly the number of arguments passed.\n\nlines 5-8\nThe function does O(1) work beyond the O(n) array construction JavaScript performs when packing n arguments into args.",
+    dleCPP:
+      "line 3\ntemplate<typename... Args> declares a variadic template parameter pack, letting the function accept any number of arguments of any (mixed) types.\n\nline 4\nArgs... args names the function's parameter pack, binding it to whatever values are passed at the call site.\n\nline 5\nsizeof...(args) is a compile-time operator that evaluates to the number of elements in the parameter pack, so it directly returns the count of arguments passed.\n\nlines 1-6\nBecause the pack size is resolved at compile time, sizeof... itself costs O(1) at runtime; the overall complexity is O(1) time and space.",
+    solutions: {
+      python: `class Solution:
+    def argumentsLength(self, *args) -> int:
+        return len(args)`,
+      javascript: `/**
+ * @param {...(null|boolean|number|string|Array|Object)} args
+ * @return {number}
+ */
+var argumentsLength = function(...args) {
+    return args.length;
+};`,
+      java: `class Solution {
+    public int argumentsLength(Object... args) {
+        return args.length;
+    }
+}`,
+      cpp: `class Solution {
+public:
+    template<typename... Args>
+    int argumentsLength(Args... args) {
+        return sizeof...(args);
+    }
+};`,
+    },
+  },
+  {
     id: 1,
     title: '2110. Number of Smooth Descent Periods of a Stock',
     difficulty: 'Medium',
