@@ -34,7 +34,7 @@ function getSampleProblemTourSteps(isExperimental) {
       selector: '[data-tour="explanation-panel"]',
       title: 'AI Explanation',
       body: isExperimental
-        ? 'Upon generating the solution, a voice AI feature will speak and read out its explanation to you, listen carefully. We advise you to wear headphones during this stage so as to not bother people in your surroundings. You may repeat it again with the Play AI Explanation button'
+        ? 'Upon generating the solution, a voice AI feature will speak and read out its explanation to you, listen carefully. We advise you to wear headphones during this stage so as to not bother people in your surroundings. You may repeat it again with the Play AI Explanation button which will appear after the AI reads its explanation'
         : "This panel will contain the AI's explanation for the solution.",
     },
     {
@@ -62,7 +62,7 @@ function getSampleProblemTourSteps(isExperimental) {
     {
       selector: null,
       title: 'Onboarding Complete',
-      body: "And that's the conclusion of the onboarding steps. You may view this anytime during the study should you forget the instructions. Clicking Done will return you to the main problem list page",
+      body: "And that's the conclusion of the onboarding steps. You may view this anytime during the study should you forget the instructions. Try it out for yourself! Read the problem, generate the solution, accept or reject, then it will return you to the main problem list page",
     },
   ]
 }
@@ -214,8 +214,6 @@ function App() {
   const handleTourNext = () => {
     if (tourStepIndex + 1 >= sampleProblemTourSteps.length) {
       setShowSampleTour(false)
-      if (participantId) localStorage.removeItem(`${SESSION_STORAGE_PREFIX}${participantId}`)
-      setSelectedProblem(null)
     } else {
       setTourStepIndex((i) => i + 1)
     }

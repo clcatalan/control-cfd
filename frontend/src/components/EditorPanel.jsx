@@ -28,6 +28,29 @@ function EditorPanel({
   const editorRef = useRef(null)
   const monacoRef = useRef(null)
   const decorationIdsRef = useRef([])
+  const editorContainerRef = useRef(null)
+
+  // Participants must evaluate the AI's solution in place, not lift it out of the
+  // editor. Monaco's copy/cut both funnel through document.execCommand, which
+  // dispatches a real (cancelable) 'copy'/'cut' DOM event on its internal textarea;
+  // capturing that event on an ancestor runs before Monaco's own listener, so
+  // stopping it here blocks every copy path (Ctrl+C, command palette, etc.).
+  useEffect(() => {
+    const container = editorContainerRef.current
+    if (!container) return
+
+    const blockClipboardWrite = (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    container.addEventListener('copy', blockClipboardWrite, true)
+    container.addEventListener('cut', blockClipboardWrite, true)
+    return () => {
+      container.removeEventListener('copy', blockClipboardWrite, true)
+      container.removeEventListener('cut', blockClipboardWrite, true)
+    }
+  }, [])
 
   // For the experimental group, hold off entirely until the voice narration's first
   // read-through has finished (holdForNarration + narrationFirstReadDone) — otherwise
@@ -117,7 +140,7 @@ function EditorPanel({
         </div>
       </div>
 
-      <div className="editor-container">
+      <div className="editor-container" ref={editorContainerRef}>
         {isGenerating && (
           <div className="editor-loading-overlay">
             <div className="spinner" />

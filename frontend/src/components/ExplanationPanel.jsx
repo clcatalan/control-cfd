@@ -153,9 +153,6 @@ function ExplanationPanel({
   const fields = languageFields[language] || languageFields.javascript
   const highLevelExplanation = problem?.[fields.hle]
   const detailedExplanation = problem?.[fields.dle]
-  // Problem 0 is the sample onboarding problem — show a placeholder instead of a
-  // real explanation, since it's just for practicing the accept/reject UI.
-  const isOnboardingProblem = problem?.id === 0
 
   return (
     <div className="explanation-panel">
@@ -188,24 +185,18 @@ function ExplanationPanel({
           </div>
         )}
         {visible && !narrationEnabled && (
-          isOnboardingProblem ? (
+          <>
             <div className="explanation-section">
-              <p className="explanation-text">This panel will contain AI's explanation for its solution</p>
+              <h4>Explanation</h4>
+              {renderDetailedExplanation(detailedExplanation, currentBlockIndex)}
             </div>
-          ) : (
-            <>
-              <div className="explanation-section">
-                <h4>Explanation</h4>
-                {renderDetailedExplanation(detailedExplanation, currentBlockIndex)}
-              </div>
-              <div className="explanation-section">
-                <h4>Summary</h4>
-                <p className={`explanation-text${currentBlockIndex === 0 ? ' is-speaking' : ''}`}>
-                  {highLevelExplanation || 'No high-level explanation available yet.'}
-                </p>
-              </div>
-            </>
-          )
+            <div className="explanation-section">
+              <h4>Summary</h4>
+              <p className={`explanation-text${currentBlockIndex === 0 ? ' is-speaking' : ''}`}>
+                {highLevelExplanation || 'No high-level explanation available yet.'}
+              </p>
+            </div>
+          </>
         )}
       </div>
 

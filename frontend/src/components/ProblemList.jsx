@@ -132,7 +132,10 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
                     title={isCompleted ? 'Already completed' : undefined}
                     onClick={() => !isCompleted && onSelectProblem && onSelectProblem(onboardingProblem)}
                   >
-                    <span className="problem-title">Sample Problem (Complete this first to unlock other problems)</span>
+                    <span className="problem-title">Sample Problem</span>
+                    <span className="problem-availability">
+                      Complete this first to unlock other problems
+                    </span>
                     {isCompleted && <span className="problem-done-badge">Done</span>}
                   </button>
                 )
