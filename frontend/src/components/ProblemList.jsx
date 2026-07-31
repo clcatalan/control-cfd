@@ -124,13 +124,14 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
             <h2 className="week-label">Onboarding Instructions</h2>
             <div className="problem-grid">
               {(() => {
+                // Unlike the real problems, the sample problem stays clickable forever —
+                // participants may want to revisit it anytime, not just before unlocking.
                 const isCompleted = completedProblemIds.includes(onboardingProblem.id)
                 return (
                   <button
-                    className={`problem-card ${isCompleted ? 'completed' : ''}`}
-                    disabled={isCompleted}
-                    title={isCompleted ? 'Already completed' : undefined}
-                    onClick={() => !isCompleted && onSelectProblem && onSelectProblem(onboardingProblem)}
+                    className="problem-card"
+                    title={isCompleted ? 'Completed — you can still revisit it anytime' : undefined}
+                    onClick={() => onSelectProblem && onSelectProblem(onboardingProblem)}
                   >
                     <span className="problem-title">Sample Problem</span>
                     <span className="problem-availability">
