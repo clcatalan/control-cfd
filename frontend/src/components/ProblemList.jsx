@@ -42,7 +42,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
   const [scheduleByProblemId, setScheduleByProblemId] = useState({})
   const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
   const [loadingSchedule, setLoadingSchedule] = useState(true)
-  const [onboardingCompleted, setOnboardingCompleted] = useState(false)
+  const [fetchedOnboardingCompleted, setFetchedOnboardingCompleted] = useState(false)
   const [loadingOnboarding, setLoadingOnboarding] = useState(true)
 
   useEffect(() => {
@@ -51,7 +51,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
         const response = await fetch(`${API_URL}/users/${encodeURIComponent(participantId)}/onboarding`)
         const data = await response.json()
         if (data.success) {
-          setOnboardingCompleted(data.completed)
+          setFetchedOnboardingCompleted(data.completed)
         }
       } catch (err) {
         console.error('Error fetching onboarding status:', err)
@@ -62,6 +62,13 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
 
     fetchOnboardingStatus()
   }, [participantId])
+
+  // completedProblemIds (from the parent, updated the instant a submission resolves)
+  // reflects finishing the sample problem well before the fetch above could possibly
+  // round-trip, which matters right when the participant is bounced back to this list
+  // after completing it — without this, the "complete the sample problem" banner could
+  // still flash for a moment because the GET above raced the POST that marks it done.
+  const onboardingCompleted = fetchedOnboardingCompleted || completedProblemIds.includes(0)
 
   useEffect(() => {
     const fetchSchedule = async () => {
