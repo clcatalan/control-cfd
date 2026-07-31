@@ -41,6 +41,9 @@ async function initializeDatabase() {
   await pool.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed_at TIMESTAMPTZ
   `);
+  await pool.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT
+  `);
   console.log('Users table ready');
 
   await pool.query(`
@@ -205,6 +208,21 @@ const dbOperations = {
       return null;
     }
     return { completed: Boolean(user.onboarding_completed_at), completedAt: user.onboarding_completed_at };
+  },
+
+  // Set a participant's password (used on first login, when no password has been nominated yet)
+  setUserPassword: async (participantId, password) => {
+    const passwordHash = bcrypt.hashSync(password, 10);
+    const { rows } = await pool.query(
+      'UPDATE users SET password_hash = $1 WHERE participant_id = $2 RETURNING *',
+      [passwordHash, participantId]
+    );
+    return rows[0];
+  },
+
+  // Verify a participant's password against their stored hash
+  verifyUserPassword: (user, password) => {
+    return bcrypt.compareSync(password, user.password_hash);
   },
 
   // Find admin by username

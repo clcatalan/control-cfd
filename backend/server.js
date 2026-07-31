@@ -42,16 +42,23 @@ app.post('/api/tts', async (req, res) => {
   }
 });
 
-// Login endpoint (validates existing users only)
+// Login endpoint (validates existing users only). If a participant's password_hash is
+// still unset, their first submitted password is nominated and stored as their password.
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const { participantId } = req.body;
+    const { participantId, password } = req.body;
 
     // Validate input
     if (!participantId || participantId.trim() === '') {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Participant ID is required' 
+      return res.status(400).json({
+        success: false,
+        message: 'Participant ID is required'
+      });
+    }
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required'
       });
     }
 
@@ -60,26 +67,40 @@ app.post('/api/auth/login', async (req, res) => {
     // Check if user exists
     const existingUser = await db.findUserByParticipantId(trimmedId);
 
-    if (existingUser) {
-      // User exists - login successful
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: existingUser.id,
-          participantId: existingUser.participant_id,
-          createdAt: existingUser.created_at,
-          studyGroup: existingUser.study_group
-        },
-        isNewUser: false
-      });
-    } else {
+    if (!existingUser) {
       // User doesn't exist - reject login
       return res.status(401).json({
         success: false,
         message: 'Invalid participant ID. Please contact the administrator.'
       });
     }
+
+    let authenticatedUser;
+    if (!existingUser.password_hash) {
+      // First login for this participant - nominate this password as theirs
+      authenticatedUser = await db.setUserPassword(trimmedId, password);
+    } else {
+      const isValid = db.verifyUserPassword(existingUser, password);
+      if (!isValid) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid password'
+        });
+      }
+      authenticatedUser = existingUser;
+    }
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: authenticatedUser.id,
+        participantId: authenticatedUser.participant_id,
+        createdAt: authenticatedUser.created_at,
+        studyGroup: authenticatedUser.study_group
+      },
+      isNewUser: false
+    });
   } catch (error) {
     console.error('Login error:', error);
 
