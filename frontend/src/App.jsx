@@ -62,7 +62,7 @@ function getSampleProblemTourSteps(isExperimental) {
     {
       selector: null,
       title: 'Onboarding Complete',
-      body: "And that's the conclusion of the onboarding steps. You may view this anytime during the study should you forget the instructions. Try it out for yourself! Read the problem, generate the solution, accept or reject, then it will return you to the main problem list page",
+      body: "And that's the conclusion of the onboarding steps. You may view this anytime during the study should you forget the instructions. Try it out for yourself! Read the problem, generate the solution, accept or reject, then it will return you to the main problem list page, and the problems should be enabled according to their schedules now.",
     },
   ]
 }
