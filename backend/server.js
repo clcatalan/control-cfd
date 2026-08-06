@@ -464,6 +464,54 @@ app.get('/api/users/:participantId/onboarding', async (req, res) => {
   }
 });
 
+// Get the problem IDs a participant has been individually granted early access to
+// (called by the study frontend to unlock problems ahead of their scheduled date)
+app.get('/api/users/:participantId/problem-overrides', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const problemIds = await db.getProblemOverrides(participantId);
+
+    if (problemIds === null) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.json({ success: true, problemIds });
+  } catch (error) {
+    console.error('Error fetching problem overrides:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching problem overrides'
+    });
+  }
+});
+
+// Let a participant open and solve a specific problem regardless of its scheduled
+// date (admin "Enable" action in the Problem Configuration page)
+app.post('/api/users/:participantId/problem-overrides', async (req, res) => {
+  try {
+    const { participantId } = req.params;
+    const { problemId } = req.body;
+
+    if (problemId === undefined || problemId === null) {
+      return res.status(400).json({ success: false, message: 'problemId is required' });
+    }
+
+    await db.enableProblemOverride(participantId, problemId);
+    res.json({ success: true, participantId, problemId });
+  } catch (error) {
+    console.error('Error enabling problem override:', error);
+
+    if (error.message === 'User not found') {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error enabling problem override'
+    });
+  }
+});
+
 // Record a generic UI event for a participant (called by the study frontend)
 app.post('/api/users/:participantId/events', async (req, res) => {
   try {
@@ -526,6 +574,21 @@ app.get('/api/groups/:group/progress', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error fetching group progress'
+    });
+  }
+});
+
+// Get the admin's own test participants (admin-con / admin-exp), which are excluded from
+// /api/groups/:group/progress so they don't skew real study data (admin use)
+app.get('/api/admin-test-participants/progress', async (req, res) => {
+  try {
+    const participants = await db.getAdminTestParticipantsCompletions();
+    res.json({ success: true, participants });
+  } catch (error) {
+    console.error('Error fetching admin test participant progress:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching admin test participant progress'
     });
   }
 });

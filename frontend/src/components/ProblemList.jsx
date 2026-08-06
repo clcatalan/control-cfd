@@ -41,6 +41,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
   const [unlockedProblemId, setUnlockedProblemId] = useState(null)
   const [scheduleByProblemId, setScheduleByProblemId] = useState({})
   const [allProblemsEnabled, setAllProblemsEnabled] = useState(false)
+  const [overriddenProblemIds, setOverriddenProblemIds] = useState([])
   const [loadingSchedule, setLoadingSchedule] = useState(true)
   const [fetchedOnboardingCompleted, setFetchedOnboardingCompleted] = useState(false)
   const [loadingOnboarding, setLoadingOnboarding] = useState(true)
@@ -105,9 +106,22 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
       }
     }
 
+    const fetchOverrides = async () => {
+      try {
+        const response = await fetch(`${API_URL}/users/${encodeURIComponent(participantId)}/problem-overrides`)
+        const data = await response.json()
+        if (data.success) {
+          setOverriddenProblemIds(data.problemIds)
+        }
+      } catch (err) {
+        console.error('Error fetching problem overrides:', err)
+      }
+    }
+
     fetchSchedule()
     fetchSettings()
-  }, [])
+    fetchOverrides()
+  }, [participantId])
 
   return (
     <div className="problem-list-page">
@@ -123,7 +137,7 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
         {!unlockAllForDev && !allProblemsEnabled && !loadingOnboarding && !onboardingCompleted && (
           <div className="no-problem-banner">Please complete the sample problem below before starting any scheduled problems.</div>
         )}
-        {!unlockAllForDev && !allProblemsEnabled && onboardingCompleted && !loadingSchedule && !unlockedProblemId && (
+        {!unlockAllForDev && !allProblemsEnabled && onboardingCompleted && !loadingSchedule && !unlockedProblemId && overriddenProblemIds.length === 0 && (
           <div className="no-problem-banner">No problem is scheduled for today. Please check back later.</div>
         )}
         {onboardingProblem && (
@@ -157,7 +171,10 @@ function ProblemList({ participantId, onSelectProblem, onLogout, completedProble
             <div className="problem-grid">
               {week.problems.map((problem) => {
                 const isUnlocked =
-                  unlockAllForDev || allProblemsEnabled || (onboardingCompleted && problem.id === unlockedProblemId)
+                  unlockAllForDev ||
+                  allProblemsEnabled ||
+                  overriddenProblemIds.includes(problem.id) ||
+                  (onboardingCompleted && problem.id === unlockedProblemId)
                 const isCompleted = completedProblemIds.includes(problem.id)
                 const scheduledDate = scheduleByProblemId[problem.id]
                 const lockedReason = !onboardingCompleted ? 'Complete the sample problem first' : 'Not available today'

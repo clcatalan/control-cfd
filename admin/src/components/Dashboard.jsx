@@ -4,6 +4,7 @@ import UsersPage from './UsersPage'
 import StudyCreation from './StudyCreation'
 import StudyDetails from './StudyDetails'
 import UserDetail from './UserDetail'
+import ProblemConfiguration from './ProblemConfiguration'
 import './Dashboard.css'
 
 function Dashboard({ onLogout }) {
@@ -38,6 +39,12 @@ function Dashboard({ onLogout }) {
             >
               Experimental Group Progress
             </NavLink>
+            <NavLink
+              to="/problem-configuration"
+              className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
+            >
+              Problem Configuration
+            </NavLink>
           </nav>
         </div>
         <div className="header-right">
@@ -54,6 +61,7 @@ function Dashboard({ onLogout }) {
           element={<StudyDetails group="experimental" title="Experimental Group Progress" />}
         />
         <Route path="/users/:participantId" element={<UserDetail />} />
+        <Route path="/problem-configuration" element={<ProblemConfiguration />} />
       </Routes>
     </div>
   )

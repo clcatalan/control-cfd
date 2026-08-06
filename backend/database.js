@@ -93,6 +93,18 @@ async function initializeDatabase() {
   `);
   console.log('Problem completions table ready');
 
+  // Per-participant overrides letting an admin unlock a specific problem for just that
+  // participant regardless of its scheduled date (the "Enable" button in the admin panel)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS problem_overrides (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      problem_id INTEGER NOT NULL,
+      enabled_at TIMESTAMPTZ DEFAULT NOW(),
+      PRIMARY KEY (user_id, problem_id)
+    )
+  `);
+  console.log('Problem overrides table ready');
+
   // Generic log of participant UI events/metrics (e.g. "opened_problem", "language_changed").
   // New event types are just new event_name strings — no schema changes needed.
   await pool.query(`
@@ -278,6 +290,21 @@ const dbOperations = {
        ORDER BY u.participant_id`,
       [group, ADMIN_TEST_PARTICIPANT_IDS]
     );
+    const { rows: overrideRows } = await pool.query(
+      `SELECT u.participant_id, po.problem_id
+       FROM users u
+       JOIN problem_overrides po ON po.user_id = u.id
+       WHERE u.study_group = $1 AND u.participant_id != ALL($2)`,
+      [group, ADMIN_TEST_PARTICIPANT_IDS]
+    );
+    const overriddenByParticipant = new Map();
+    overrideRows.forEach((row) => {
+      if (!overriddenByParticipant.has(row.participant_id)) {
+        overriddenByParticipant.set(row.participant_id, []);
+      }
+      overriddenByParticipant.get(row.participant_id).push(row.problem_id);
+    });
+
     const completionsByParticipant = new Map();
     rows.forEach((row) => {
       if (!completionsByParticipant.has(row.participant_id)) {
@@ -295,8 +322,91 @@ const dbOperations = {
     });
     return Array.from(completionsByParticipant, ([participantId, completions]) => ({
       participantId,
-      completions
+      completions,
+      overriddenProblemIds: overriddenByParticipant.get(participantId) || []
     }));
+  },
+
+  // Get the admin's own test participants (admin-con / admin-exp) along with their per-problem
+  // completions. These are excluded from getGroupCompletions so they don't skew real study data,
+  // but the admin still needs to see and test against them directly (e.g. the Problem Configuration page).
+  getAdminTestParticipantsCompletions: async () => {
+    const { rows } = await pool.query(
+      `SELECT u.participant_id, u.study_group, pc.problem_id, pc.response, pc.submitted_code, pc.leetcode_verified, pc.bug_type
+       FROM users u
+       LEFT JOIN problem_completions pc ON pc.user_id = u.id
+       WHERE u.participant_id = ANY($1)
+       ORDER BY u.participant_id`,
+      [ADMIN_TEST_PARTICIPANT_IDS]
+    );
+    const { rows: overrideRows } = await pool.query(
+      `SELECT u.participant_id, po.problem_id
+       FROM users u
+       JOIN problem_overrides po ON po.user_id = u.id
+       WHERE u.participant_id = ANY($1)`,
+      [ADMIN_TEST_PARTICIPANT_IDS]
+    );
+    const overriddenByParticipant = new Map();
+    overrideRows.forEach((row) => {
+      if (!overriddenByParticipant.has(row.participant_id)) {
+        overriddenByParticipant.set(row.participant_id, []);
+      }
+      overriddenByParticipant.get(row.participant_id).push(row.problem_id);
+    });
+
+    const completionsByParticipant = new Map();
+    const groupByParticipant = new Map();
+    rows.forEach((row) => {
+      groupByParticipant.set(row.participant_id, row.study_group);
+      if (!completionsByParticipant.has(row.participant_id)) {
+        completionsByParticipant.set(row.participant_id, []);
+      }
+      if (row.problem_id !== null) {
+        completionsByParticipant.get(row.participant_id).push({
+          problemId: row.problem_id,
+          response: row.response,
+          submittedCode: row.submitted_code,
+          leetcodeVerified: row.leetcode_verified,
+          bugType: row.bug_type
+        });
+      }
+    });
+    return Array.from(completionsByParticipant, ([participantId, completions]) => ({
+      participantId,
+      group: groupByParticipant.get(participantId),
+      completions,
+      overriddenProblemIds: overriddenByParticipant.get(participantId) || []
+    }));
+  },
+
+  // Let a participant open and solve a specific problem regardless of its scheduled
+  // date (admin "Enable" action in the Problem Configuration page)
+  enableProblemOverride: async (participantId, problemId) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    await pool.query(
+      `INSERT INTO problem_overrides (user_id, problem_id)
+       VALUES ($1, $2)
+       ON CONFLICT (user_id, problem_id) DO NOTHING`,
+      [user.id, problemId]
+    );
+    return { userId: user.id, problemId };
+  },
+
+  // Get the problem IDs a participant has been individually granted early access to,
+  // or null if the participant doesn't exist (study frontend use, to unlock problems)
+  getProblemOverrides: async (participantId) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      return null;
+    }
+    const { rows } = await pool.query(
+      'SELECT problem_id FROM problem_overrides WHERE user_id = $1',
+      [user.id]
+    );
+    return rows.map((row) => row.problem_id);
   },
 
   // Get a participant's completed problem IDs, or null if the participant doesn't exist
@@ -411,6 +521,7 @@ const dbOperations = {
       await client.query('BEGIN');
       await client.query('DELETE FROM problem_completions');
       await client.query('DELETE FROM problem_schedule');
+      await client.query('DELETE FROM problem_overrides');
       await client.query('DELETE FROM user_events');
       await client.query('UPDATE users SET onboarding_completed_at = NULL');
       const { rows } = await client.query(

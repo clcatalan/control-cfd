@@ -34,3 +34,36 @@
 .progress-empty {
   color: #d0d3e0;
 }
+
+.progress-group-cell {
+  white-space: nowrap;
+  color: #555;
+}
+
+.enable-problem-btn {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: none;
+  padding: 2px 8px;
+  border: 1px solid #5b4fc4;
+  border-radius: 4px;
+  background: #fff;
+  color: #5b4fc4;
+  cursor: pointer;
+}
+
+.enable-problem-btn:hover {
+  background: #5b4fc4;
+  color: #fff;
+}
+
+.enable-problem-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.progress-enabled {
+  color: #5b4fc4;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
