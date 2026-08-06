@@ -510,6 +510,26 @@ app.get('/api/problems', (req, res) => {
   res.json({ success: true, problems });
 });
 
+// Get every participant in a study group with the problem IDs they've completed (admin use)
+app.get('/api/groups/:group/progress', async (req, res) => {
+  try {
+    const { group } = req.params;
+
+    if (group !== 'control' && group !== 'experimental') {
+      return res.status(400).json({ success: false, message: 'group must be "control" or "experimental"' });
+    }
+
+    const participants = await db.getGroupCompletions(group);
+    res.json({ success: true, group, participants });
+  } catch (error) {
+    console.error('Error fetching group progress:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching group progress'
+    });
+  }
+});
+
 app.get('/api/schedule', async (req, res) => {
   try {
     const schedule = await db.getSchedule();

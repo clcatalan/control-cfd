@@ -143,6 +143,10 @@ initializeDatabase().catch((err) => {
 // Postgres unique-violation error code
 const UNIQUE_VIOLATION = '23505';
 
+// Admin test accounts used to manually exercise the study flow; not real participants,
+// so they're excluded from group-progress views.
+const ADMIN_TEST_PARTICIPANT_IDS = ['admin-con', 'admin-exp'];
+
 // Database operations
 const dbOperations = {
   // Create a new user
@@ -260,6 +264,39 @@ const dbOperations = {
       [user.id, problemId, response || null, code || null, bugType || null, certainty || null]
     );
     return { userId: user.id, problemId };
+  },
+
+  // Get every participant in a study group along with their per-problem completions
+  // (admin use, e.g. a group-wide progress table or group-wide score totals). Participants
+  // with no completions yet still appear, with an empty completions array.
+  getGroupCompletions: async (group) => {
+    const { rows } = await pool.query(
+      `SELECT u.participant_id, pc.problem_id, pc.response, pc.submitted_code, pc.leetcode_verified, pc.bug_type
+       FROM users u
+       LEFT JOIN problem_completions pc ON pc.user_id = u.id
+       WHERE u.study_group = $1 AND u.participant_id != ALL($2)
+       ORDER BY u.participant_id`,
+      [group, ADMIN_TEST_PARTICIPANT_IDS]
+    );
+    const completionsByParticipant = new Map();
+    rows.forEach((row) => {
+      if (!completionsByParticipant.has(row.participant_id)) {
+        completionsByParticipant.set(row.participant_id, []);
+      }
+      if (row.problem_id !== null) {
+        completionsByParticipant.get(row.participant_id).push({
+          problemId: row.problem_id,
+          response: row.response,
+          submittedCode: row.submitted_code,
+          leetcodeVerified: row.leetcode_verified,
+          bugType: row.bug_type
+        });
+      }
+    });
+    return Array.from(completionsByParticipant, ([participantId, completions]) => ({
+      participantId,
+      completions
+    }));
   },
 
   // Get a participant's completed problem IDs, or null if the participant doesn't exist

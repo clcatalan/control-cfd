@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import './UserDetail.css'
 import './UsersTable.css'
+import { RED_PROBLEM_IDS, GREEN_PROBLEM_IDS, countOverReliance, countAccuracy } from '../utils/scoring'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 
@@ -115,25 +116,10 @@ function UserDetail() {
 
   const problemLabel = (problem) => `P${problem.id}: ${problem.title.replace(/^\d+\.\s*/, '')}`
 
-  // Problems 2, 4, 7, 9, 10 have a synthetic error seeded into their solution;
-  // the rest (1, 3, 5, 6, 8) are correct as generated
-  const redProblemIds = new Set([2, 4, 7, 9, 10])
-  const greenProblemIds = new Set([1, 3, 5, 6, 8])
-  const rowClass = (problem) => (redProblemIds.has(problem.id) ? 'row-red' : 'row-green')
+  const rowClass = (problem) => (RED_PROBLEM_IDS.has(problem.id) ? 'row-red' : 'row-green')
 
-  // How often the participant accepted a flawed solution, out of all flawed problems
-  const overRelianceCount = progress.filter((p) => redProblemIds.has(p.id) && p.response === 'accept').length
-  const overRelianceScore = `${overRelianceCount}/${redProblemIds.size}`
-
-  // How often the participant made the correct call, out of all problems: accepting a
-  // correct solution, or rejecting a flawed one with a resubmitted fix that the admin
-  // has manually confirmed actually passes on LeetCode
-  const accuracyCount = progress.filter(
-    (p) =>
-      (greenProblemIds.has(p.id) && p.response === 'accept') ||
-      (redProblemIds.has(p.id) && p.response === 'reject' && !!p.submittedCode && p.leetcodeVerified === 'passed')
-  ).length
-  const accuracyScore = `${accuracyCount}/${greenProblemIds.size + redProblemIds.size}`
+  const overRelianceScore = `${countOverReliance(progress)}/${RED_PROBLEM_IDS.size}`
+  const accuracyScore = `${countAccuracy(progress)}/${GREEN_PROBLEM_IDS.size + RED_PROBLEM_IDS.size}`
 
   const eventsForProblem = (problemId, eventName) =>
     events.filter((event) => event.event_name === eventName && event.metadata?.problemId === problemId)

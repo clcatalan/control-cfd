@@ -1,0 +1,36 @@
+.progress-table .progress-col {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.progress-table .progress-col-red {
+  background: #fdecea;
+}
+
+.progress-table .progress-col-green {
+  background: #e9f9ee;
+}
+
+.progress-accept {
+  color: #2f6f4f;
+  font-weight: 700;
+}
+
+.progress-reject-correct {
+  color: #2f6f4f;
+  font-weight: 700;
+}
+
+.progress-reject-wrong {
+  color: #c0392b;
+  font-weight: 700;
+}
+
+.progress-timeout {
+  color: #d68910;
+  font-weight: 700;
+}
+
+.progress-empty {
+  color: #d0d3e0;
+}

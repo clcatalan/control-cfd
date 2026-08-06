@@ -30,7 +30,13 @@ function Dashboard({ onLogout }) {
               to="/study-details"
               className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
             >
-              Study Details
+              Control Group Progress
+            </NavLink>
+            <NavLink
+              to="/experimental-group-progress"
+              className={({ isActive }) => `nav-btn ${isActive ? 'active' : ''}`}
+            >
+              Experimental Group Progress
             </NavLink>
           </nav>
         </div>
@@ -42,7 +48,11 @@ function Dashboard({ onLogout }) {
       <Routes>
         <Route path="/" element={<UsersPage />} />
         <Route path="/study-creation" element={<StudyCreation />} />
-        <Route path="/study-details" element={<StudyDetails />} />
+        <Route path="/study-details" element={<StudyDetails group="control" title="Control Group Progress" />} />
+        <Route
+          path="/experimental-group-progress"
+          element={<StudyDetails group="experimental" title="Experimental Group Progress" />}
+        />
         <Route path="/users/:participantId" element={<UserDetail />} />
       </Routes>
     </div>
