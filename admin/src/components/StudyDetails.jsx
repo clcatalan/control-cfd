@@ -70,6 +70,23 @@ function StudyDetails({ group, title }) {
   const overRelianceDenominator = RED_PROBLEM_IDS.size * participants.length
   const accuracyDenominator = (RED_PROBLEM_IDS.size + GREEN_PROBLEM_IDS.size) * participants.length
 
+  const correctCountByProblemId = useMemo(() => {
+    const counts = new Map()
+    participants.forEach((participant) => {
+      participant.completions.forEach((c) => {
+        const isCorrect =
+          (GREEN_PROBLEM_IDS.has(c.problemId) && c.response === 'accept') ||
+          (RED_PROBLEM_IDS.has(c.problemId) &&
+            c.response === 'reject' &&
+            classifyRejection(c.problemId, c.bugType) === 'R-C')
+        if (isCorrect) {
+          counts.set(c.problemId, (counts.get(c.problemId) || 0) + 1)
+        }
+      })
+    })
+    return counts
+  }, [participants])
+
   return (
     <div className="dashboard-content">
       <div className="content-header">
@@ -91,11 +108,11 @@ function StudyDetails({ group, title }) {
           <div className="score-summary">
             <div className="score-item">
               <span className="score-label">Over-reliance Score</span>
-              <span className="score-value">{totals.overReliance}/{overRelianceDenominator}</span>
+              <span className="score-value">{totals.overReliance}/{overRelianceDenominator} | {(totals.overReliance / overRelianceDenominator).toFixed(2)} </span>
             </div>
             <div className="score-item">
               <span className="score-label">Accuracy Score</span>
-              <span className="score-value">{totals.accuracy}/{accuracyDenominator}</span>
+              <span className="score-value">{totals.accuracy}/{accuracyDenominator} | {(totals.accuracy / accuracyDenominator).toFixed(2)}</span>
             </div>
           </div>
           <div className="users-table-wrapper">
@@ -105,7 +122,8 @@ function StudyDetails({ group, title }) {
                   <th>Participant ID</th>
                   {sortedProblems.map((problem) => (
                     <th key={problem.id} className={`progress-col ${problemColumnClass(problem.id)}`}>
-                      {problemColumnLabel(problem.id)}
+                      <div>{problemColumnLabel(problem.id)}</div>
+                      <div className="progress-col-count">{correctCountByProblemId.get(problem.id) || 0}</div>
                     </th>
                   ))}
                 </tr>

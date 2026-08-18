@@ -395,6 +395,20 @@ const dbOperations = {
     return { userId: user.id, problemId };
   },
 
+  // Revoke a participant's early access to a specific problem (admin "Disable" action
+  // in the Problem Configuration page)
+  disableProblemOverride: async (participantId, problemId) => {
+    const user = await dbOperations.findUserByParticipantId(participantId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    await pool.query(
+      'DELETE FROM problem_overrides WHERE user_id = $1 AND problem_id = $2',
+      [user.id, problemId]
+    );
+    return { userId: user.id, problemId };
+  },
+
   // Get the problem IDs a participant has been individually granted early access to,
   // or null if the participant doesn't exist (study frontend use, to unlock problems)
   getProblemOverrides: async (participantId) => {

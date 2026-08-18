@@ -106,6 +106,38 @@ function ProblemConfiguration() {
     }
   }
 
+  const handleDisable = async (participantId, problemId) => {
+    const key = `${participantId}:${problemId}`
+    setEnablingKey(key)
+    setError('')
+    try {
+      const response = await fetch(
+        `${API_URL}/users/${encodeURIComponent(participantId)}/problem-overrides/${problemId}`,
+        { method: 'DELETE' }
+      )
+      const data = await response.json()
+      if (data.success) {
+        setParticipants((prev) =>
+          prev.map((participant) =>
+            participant.participantId === participantId
+              ? {
+                  ...participant,
+                  overriddenProblemIds: (participant.overriddenProblemIds || []).filter((id) => id !== problemId)
+                }
+              : participant
+          )
+        )
+      } else {
+        setError(data.message || 'Failed to disable problem')
+      }
+    } catch (err) {
+      console.error('Error disabling problem:', err)
+      setError('Failed to disable problem')
+    } finally {
+      setEnablingKey(null)
+    }
+  }
+
   const sortedProblems = useMemo(
     () => [...problems].sort((a, b) => a.id - b.id),
     [problems]
@@ -212,7 +244,14 @@ function ProblemConfiguration() {
                         return (
                           <td key={problem.id} className={`progress-col ${problemColumnClass(problem.id)}`}>
                             {isEmptyPastDue && isEnabled ? (
-                              <span className="progress-enabled">Enabled</span>
+                              <button
+                                type="button"
+                                className="enable-problem-btn disable-problem-btn"
+                                disabled={enablingKey === key}
+                                onClick={() => handleDisable(participant.participantId, problem.id)}
+                              >
+                                {enablingKey === key ? 'Disabling…' : 'Disable'}
+                              </button>
                             ) : isEmptyPastDue ? (
                               <button
                                 type="button"

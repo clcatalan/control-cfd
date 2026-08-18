@@ -11,6 +11,12 @@
   background: #e9f9ee;
 }
 
+.progress-col-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b6f80;
+}
+
 .progress-accept {
   color: #2f6f4f;
   font-weight: 700;
@@ -62,8 +68,12 @@
   cursor: default;
 }
 
-.progress-enabled {
-  color: #5b4fc4;
-  font-weight: 700;
-  font-size: 0.8rem;
+.disable-problem-btn {
+  border-color: #c0392b;
+  color: #c0392b;
+}
+
+.disable-problem-btn:hover {
+  background: #c0392b;
+  color: #fff;
 }

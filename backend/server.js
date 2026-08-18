@@ -512,6 +512,28 @@ app.post('/api/users/:participantId/problem-overrides', async (req, res) => {
   }
 });
 
+// Revoke a participant's early access to a specific problem (admin "Disable" action
+// in the Problem Configuration page)
+app.delete('/api/users/:participantId/problem-overrides/:problemId', async (req, res) => {
+  try {
+    const { participantId, problemId } = req.params;
+
+    await db.disableProblemOverride(participantId, Number(problemId));
+    res.json({ success: true, participantId, problemId: Number(problemId) });
+  } catch (error) {
+    console.error('Error disabling problem override:', error);
+
+    if (error.message === 'User not found') {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Error disabling problem override'
+    });
+  }
+});
+
 // Record a generic UI event for a participant (called by the study frontend)
 app.post('/api/users/:participantId/events', async (req, res) => {
   try {

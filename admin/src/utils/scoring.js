@@ -28,12 +28,11 @@ export function countOverReliance(completions) {
 }
 
 // How often a participant made the correct call, out of all problems: accepting a
-// correct solution, or rejecting a flawed one with a resubmitted fix that the admin
-// has manually confirmed actually passes on LeetCode
+// correct solution, or rejecting a flawed one with the correctly diagnosed bug type
 export function countAccuracy(completions) {
   return completions.filter(
     (c) =>
       (GREEN_PROBLEM_IDS.has(c.id) && c.response === 'accept') ||
-      (RED_PROBLEM_IDS.has(c.id) && c.response === 'reject' && !!c.submittedCode && c.leetcodeVerified === 'passed')
+      (RED_PROBLEM_IDS.has(c.id) && c.response === 'reject' && classifyRejection(c.id, c.bugType) === 'R-C')
   ).length
 }
