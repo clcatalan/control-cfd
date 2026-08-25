@@ -410,6 +410,7 @@ app.post('/api/users/:participantId/problems/:problemId/leetcode-verification', 
 app.get('/api/users/:participantId/progress', async (req, res) => {
   try {
     const { participantId } = req.params;
+    const user = await db.findUserByParticipantId(participantId);
     const completions = await db.getUserCompletions(participantId);
 
     if (completions === null) {
@@ -432,7 +433,7 @@ app.get('/api/users/:participantId/progress', async (req, res) => {
       };
     });
 
-    res.json({ success: true, participantId, progress });
+    res.json({ success: true, participantId, studyGroup: user?.study_group || null, progress });
   } catch (error) {
     console.error('Error fetching progress:', error);
     res.status(500).json({
@@ -571,6 +572,19 @@ app.get('/api/users/:participantId/events', async (req, res) => {
   } catch (error) {
     console.error('Error fetching events:', error);
     res.status(500).json({ success: false, message: 'Error fetching events' });
+  }
+});
+
+// Get every real participant in a study group along with their logged events (admin use,
+// e.g. computing group-wide dwell time in one request instead of one per participant)
+app.get('/api/groups/:group/events', async (req, res) => {
+  try {
+    const { group } = req.params;
+    const participants = await db.getGroupEvents(group);
+    res.json({ success: true, group, participants });
+  } catch (error) {
+    console.error('Error fetching group events:', error);
+    res.status(500).json({ success: false, message: 'Error fetching group events' });
   }
 });
 

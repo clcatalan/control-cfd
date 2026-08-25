@@ -1,6 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import './StudyDetails.css'
-import { RED_PROBLEM_IDS, GREEN_PROBLEM_IDS, countOverReliance, countAccuracy, classifyRejection } from '../utils/scoring'
+import {
+  RED_PROBLEM_IDS,
+  GREEN_PROBLEM_IDS,
+  countOverReliance,
+  countAccuracy,
+  classifyRejection,
+  averageCertaintyScore
+} from '../utils/scoring'
+import { averageDwellTimeSeconds, formatDwellTime } from '../utils/dwellTime'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 
@@ -17,6 +25,7 @@ function problemColumnClass(problemId) {
 function StudyDetails({ group, title }) {
   const [problems, setProblems] = useState([])
   const [participants, setParticipants] = useState([])
+  const [eventsByParticipant, setEventsByParticipant] = useState(new Map())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -25,12 +34,14 @@ function StudyDetails({ group, title }) {
       setLoading(true)
       setError('')
       try {
-        const [problemsRes, progressRes] = await Promise.all([
+        const [problemsRes, progressRes, eventsRes] = await Promise.all([
           fetch(`${API_URL}/problems`),
-          fetch(`${API_URL}/groups/${group}/progress`)
+          fetch(`${API_URL}/groups/${group}/progress`),
+          fetch(`${API_URL}/groups/${group}/events`)
         ])
         const problemsData = await problemsRes.json()
         const progressData = await progressRes.json()
+        const eventsData = await eventsRes.json()
 
         if (problemsData.success) {
           setProblems(problemsData.problems)
@@ -39,6 +50,11 @@ function StudyDetails({ group, title }) {
           setParticipants(progressData.participants)
         } else {
           setError(`Failed to fetch ${group} group progress`)
+        }
+        if (eventsData.success) {
+          setEventsByParticipant(
+            new Map(eventsData.participants.map((p) => [p.participantId, p.events]))
+          )
         }
       } catch (err) {
         console.error('Error fetching study details:', err)
@@ -69,6 +85,29 @@ function StudyDetails({ group, title }) {
 
   const overRelianceDenominator = RED_PROBLEM_IDS.size * participants.length
   const accuracyDenominator = (RED_PROBLEM_IDS.size + GREEN_PROBLEM_IDS.size) * participants.length
+
+  // Group average dwell time as the average of each participant's own average dwell time
+  // (not one big pooled average), so a participant with more valid dwell-time observations
+  // (fewer timeouts) doesn't get more weight than one with fewer.
+  const averageGroupDwellTimeSeconds = useMemo(() => {
+    const problemIds = sortedProblems.map((problem) => problem.id)
+    const participantAverages = participants
+      .map((participant) => averageDwellTimeSeconds(eventsByParticipant.get(participant.participantId) || [], problemIds, group))
+      .filter((avg) => avg !== null)
+    if (participantAverages.length === 0) return null
+    return Math.round(participantAverages.reduce((sum, avg) => sum + avg, 0) / participantAverages.length)
+  }, [participants, eventsByParticipant, sortedProblems, group])
+
+  // Group average certainty as the average of each participant's own average certainty
+  // score, for the same reason as dwell time above: equal weight per participant regardless
+  // of how many of their problems have a recorded certainty.
+  const averageGroupCertaintyScore = useMemo(() => {
+    const participantAverages = participants
+      .map((participant) => averageCertaintyScore(participant.completions))
+      .filter((avg) => avg !== null)
+    if (participantAverages.length === 0) return null
+    return participantAverages.reduce((sum, avg) => sum + avg, 0) / participantAverages.length
+  }, [participants])
 
   const correctCountByProblemId = useMemo(() => {
     const counts = new Map()
@@ -113,6 +152,14 @@ function StudyDetails({ group, title }) {
             <div className="score-item">
               <span className="score-label">Accuracy Score</span>
               <span className="score-value">{totals.accuracy}/{accuracyDenominator} | {(totals.accuracy / accuracyDenominator).toFixed(2)}</span>
+            </div>
+            <div className="score-item">
+              <span className="score-label">Average Dwell Time</span>
+              <span className="score-value">{formatDwellTime(averageGroupDwellTimeSeconds)}</span>
+            </div>
+            <div className="score-item">
+              <span className="score-label">Average Certainty Score</span>
+              <span className="score-value">{averageGroupCertaintyScore === null ? '—' : averageGroupCertaintyScore.toFixed(2)}</span>
             </div>
           </div>
           <div className="users-table-wrapper">

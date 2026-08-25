@@ -36,3 +36,21 @@ export function countAccuracy(completions) {
       (RED_PROBLEM_IDS.has(c.id) && c.response === 'reject' && classifyRejection(c.id, c.bugType) === 'R-C')
   ).length
 }
+
+// Numeric mapping for the 5-point certainty Likert scale participants choose from
+// when accepting/rejecting a solution (see ExplanationPanel's CERTAINTY_LEVELS)
+export const CERTAINTY_SCORES = {
+  'Very Uncertain': -2,
+  'Uncertain': -1,
+  'Neither Certain nor Uncertain': 0,
+  'Certain': 1,
+  'Very Certain': 2
+}
+
+// A participant's own average certainty score across their completions (problems with no
+// certainty recorded, e.g. timeouts, are excluded rather than counted as zero)
+export function averageCertaintyScore(completions) {
+  const scores = completions.map((c) => CERTAINTY_SCORES[c.certainty]).filter((score) => score !== undefined)
+  if (scores.length === 0) return null
+  return scores.reduce((sum, score) => sum + score, 0) / scores.length
+}

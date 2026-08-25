@@ -283,7 +283,7 @@ const dbOperations = {
   // with no completions yet still appear, with an empty completions array.
   getGroupCompletions: async (group) => {
     const { rows } = await pool.query(
-      `SELECT u.participant_id, pc.problem_id, pc.response, pc.submitted_code, pc.leetcode_verified, pc.bug_type
+      `SELECT u.participant_id, pc.problem_id, pc.response, pc.submitted_code, pc.leetcode_verified, pc.bug_type, pc.certainty
        FROM users u
        LEFT JOIN problem_completions pc ON pc.user_id = u.id
        WHERE u.study_group = $1 AND u.participant_id != ALL($2)
@@ -316,7 +316,8 @@ const dbOperations = {
           response: row.response,
           submittedCode: row.submitted_code,
           leetcodeVerified: row.leetcode_verified,
-          bugType: row.bug_type
+          bugType: row.bug_type,
+          certainty: row.certainty
         });
       }
     });
@@ -325,6 +326,34 @@ const dbOperations = {
       completions,
       overriddenProblemIds: overriddenByParticipant.get(participantId) || []
     }));
+  },
+
+  // Get every real participant in a study group along with their logged events (admin use,
+  // e.g. computing group-wide dwell time without an N+1 request per participant)
+  getGroupEvents: async (group) => {
+    const { rows } = await pool.query(
+      `SELECT u.participant_id, e.event_name, e.metadata, e.created_at
+       FROM users u
+       JOIN user_events e ON e.user_id = u.id
+       WHERE u.study_group = $1 AND u.participant_id != ALL($2)
+       ORDER BY u.participant_id, e.created_at`,
+      [group, ADMIN_TEST_PARTICIPANT_IDS]
+    );
+
+    const eventsByParticipant = new Map();
+    rows.forEach((row) => {
+      if (!eventsByParticipant.has(row.participant_id)) {
+        eventsByParticipant.set(row.participant_id, []);
+      }
+      // Field names match getUserEvents' raw pass-through (event_name, metadata, created_at)
+      // so both endpoints can be consumed by the same client-side dwell-time helpers
+      eventsByParticipant.get(row.participant_id).push({
+        event_name: row.event_name,
+        metadata: row.metadata,
+        created_at: row.created_at
+      });
+    });
+    return Array.from(eventsByParticipant, ([participantId, events]) => ({ participantId, events }));
   },
 
   // Get the admin's own test participants (admin-con / admin-exp) along with their per-problem

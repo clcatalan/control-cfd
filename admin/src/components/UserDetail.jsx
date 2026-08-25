@@ -2,13 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import './UserDetail.css'
 import './UsersTable.css'
-import { RED_PROBLEM_IDS, GREEN_PROBLEM_IDS, countOverReliance, countAccuracy } from '../utils/scoring'
+import { RED_PROBLEM_IDS, GREEN_PROBLEM_IDS, countOverReliance, countAccuracy, averageCertaintyScore } from '../utils/scoring'
+import {
+  earliestEventTimestamp as sharedEarliestEventTimestamp,
+  latestEventTimestamp as sharedLatestEventTimestamp,
+  dwellTimeSeconds as sharedDwellTimeSeconds,
+  formatDwellTime,
+  averageDwellTimeSeconds as sharedAverageDwellTimeSeconds,
+} from '../utils/dwellTime'
 
 const API_URL = import.meta.env.PROD ? '/api' : 'http://localhost:3001/api'
 
 function UserDetail() {
   const { participantId } = useParams()
   const [progress, setProgress] = useState([])
+  const [studyGroup, setStudyGroup] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [events, setEvents] = useState([])
@@ -70,6 +78,7 @@ function UserDetail() {
         const data = await response.json()
         if (data.success) {
           setProgress(data.progress)
+          setStudyGroup(data.studyGroup)
         } else {
           setError(data.message || 'Failed to load progress')
         }
@@ -124,21 +133,8 @@ function UserDetail() {
   const eventsForProblem = (problemId, eventName) =>
     events.filter((event) => event.event_name === eventName && event.metadata?.problemId === problemId)
 
-  // Earliest occurrence best reflects the initial problem open / generate click
-  const earliestEventTimestamp = (problemId, eventName) => {
-    const matches = eventsForProblem(problemId, eventName)
-    if (matches.length === 0) return null
-    const earliest = matches.reduce((a, b) => (new Date(a.created_at) < new Date(b.created_at) ? a : b))
-    return earliest.metadata?.timestamp ?? null
-  }
-
-  // Most recent occurrence best reflects the participant's final response
-  const latestEventTimestamp = (problemId, eventName) => {
-    const matches = eventsForProblem(problemId, eventName)
-    if (matches.length === 0) return null
-    const latest = matches.reduce((a, b) => (new Date(a.created_at) > new Date(b.created_at) ? a : b))
-    return latest.metadata?.timestamp ?? null
-  }
+  const earliestEventTimestamp = (problemId, eventName) => sharedEarliestEventTimestamp(events, problemId, eventName)
+  const latestEventTimestamp = (problemId, eventName) => sharedLatestEventTimestamp(events, problemId, eventName)
 
   const latestEventMetadata = (problemId, eventName) => {
     const matches = eventsForProblem(problemId, eventName)
@@ -152,6 +148,16 @@ function UserDetail() {
   const voiceExplanationCompletedAt = (problemId) => earliestEventTimestamp(problemId, 'voice_explanation_completed')
   const respondedAt = (problemId) => latestEventTimestamp(problemId, 'accept_reject_clicked')
   const voiceReplayCount = (problemId) => eventsForProblem(problemId, 'repeated_voice_explanation').length
+
+  const dwellTimeSeconds = (problemId) => sharedDwellTimeSeconds(events, problemId, studyGroup)
+
+  const averageDwellTimeSeconds = sharedAverageDwellTimeSeconds(
+    events,
+    progress.map((problem) => problem.id),
+    studyGroup
+  )
+
+  const averageCertaintyScoreValue = averageCertaintyScore(progress)
 
   // Most recent explicit dropdown selection; falls back to the language used at the
   // last generate click (covers participants who never touched the dropdown)
@@ -185,6 +191,14 @@ function UserDetail() {
                 <span className="score-label">Accuracy Score</span>
                 <span className="score-value">{accuracyScore}</span>
               </div>
+              <div className="score-item">
+                <span className="score-label">Average Dwell Time</span>
+                <span className="score-value">{formatDwellTime(averageDwellTimeSeconds)}</span>
+              </div>
+              <div className="score-item">
+                <span className="score-label">Average Certainty Score</span>
+                <span className="score-value">{averageCertaintyScoreValue === null ? '—' : averageCertaintyScoreValue.toFixed(2)}</span>
+              </div>
             </div>
             <div className="users-table-wrapper">
               <table className="users-table">
@@ -195,6 +209,7 @@ function UserDetail() {
                     <th>Solution Generated At</th>
                     <th>Voice Explanation Completed At</th>
                     <th>Participant Responded At</th>
+                    <th>Dwell Time</th>
                     <th>Voice Replays</th>
                     <th>Language</th>
                     <th>Response</th>
@@ -210,6 +225,7 @@ function UserDetail() {
                     const voiceCompletedAt = voiceExplanationCompletedAt(problem.id)
                     const respondedAtValue = respondedAt(problem.id)
                     const replayCount = voiceReplayCount(problem.id)
+                    const dwellTime = dwellTimeSeconds(problem.id)
                     return (
                       <tr key={problem.id} className={rowClass(problem)}>
                         <td>{problemLabel(problem)}</td>
@@ -217,6 +233,7 @@ function UserDetail() {
                         <td>{generatedAt || '—'}</td>
                         <td>{voiceCompletedAt || '—'}</td>
                         <td>{respondedAtValue || '—'}</td>
+                        <td>{formatDwellTime(dwellTime)}</td>
                         <td>{replayCount > 0 ? replayCount : '—'}</td>
                         <td>{language || '—'}</td>
                         <td className={`response-cell response-${problem.response || 'none'}`}>
